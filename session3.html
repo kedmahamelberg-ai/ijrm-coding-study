@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session 3 of 3 — AI Posts Coding</title>
+<style>
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0; padding: 0; background: #f5f7fa; color: #1a1a1a; line-height: 1.5;
+  }
+  header {
+    position: sticky; top: 0; background: #1f3864; color: white; padding: 12px 24px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1); z-index: 100;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  header a { color: white; text-decoration: none; font-size: 14px; padding: 6px 10px; border-radius: 4px; }
+  header a:hover { background: rgba(255,255,255,0.15); }
+  .progress { font-size: 14px; }
+  .progress strong { font-size: 16px; }
+  main { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+  button {
+    padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+    font-weight: 500;
+  }
+  .btn-primary { background: #28a745; color: white; }
+  .btn-primary:disabled { background: #6c757d; cursor: not-allowed; opacity: 0.7; }
+  .btn-primary:not(:disabled):hover { background: #218838; }
+  .btn-secondary { background: white; color: #1f3864; border: 1px solid #ccc; }
+  .btn-secondary:hover { background: #e6e9f0; }
+
+  .post-card {
+    background: white; border-radius: 8px; padding: 20px 24px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 4px solid #d0d4dc;
+    transition: border-color 0.2s;
+  }
+  .post-card.complete { border-left-color: #28a745; }
+  .post-card .post-num { font-size: 13px; color: #666; font-weight: 600; }
+  .post-card .post-text {
+    margin: 12px 0 20px 0; padding: 14px; background: #f5f7fa; border-radius: 4px;
+    white-space: pre-wrap; word-break: break-word; font-size: 14px;
+    max-height: 400px; overflow-y: auto;
+  }
+  .post-card .questions { display: flex; flex-direction: column; gap: 16px; }
+  .post-card .off-topic-q {
+    padding: 12px 14px; background: #f8f9fa; border-radius: 6px; border: 1px solid #e1e4e8;
+  }
+  .post-card .coding-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .post-card .auto-coded-notice {
+    display: none; padding: 12px 16px; background: #d4edda; border-left: 4px solid #28a745;
+    border-radius: 4px; font-size: 13px; color: #155724; line-height: 1.5;
+  }
+  .post-card label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .post-card select {
+    width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;
+    font-size: 14px; background: white;
+  }
+  .post-card select:disabled {
+    background: #eef0f3; color: #888; cursor: not-allowed;
+  }
+
+  .pid-banner {
+    background: white; border-radius: 8px; padding: 12px 20px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; justify-content: space-between;
+    align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+  .pid-banner .pid-label { font-size: 13px; color: #666; }
+  .pid-banner .pid-value { font-family: monospace; font-weight: 600; }
+  .pid-banner .save-status { font-size: 12px; color: #666; }
+
+  .codebook-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); z-index: 1000; padding: 20px;
+  }
+  .codebook-overlay.show { display: flex; align-items: center; justify-content: center; }
+  .codebook {
+    background: white; max-width: 800px; max-height: 90vh; overflow-y: auto;
+    border-radius: 8px; padding: 24px 32px; position: relative;
+  }
+  .codebook .close {
+    position: absolute; top: 12px; right: 16px; font-size: 28px; cursor: pointer;
+    background: none; border: none; color: #666; line-height: 1;
+  }
+  .codebook h2, .codebook h3 { color: #1f3864; }
+  .codebook table { border-collapse: collapse; width: 100%; margin: 8px 0 16px 0; }
+  .codebook th, .codebook td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+  .codebook th { background: #f5f7fa; }
+  .codebook code { background: #f0f2f5; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+
+  .footer-bar {
+    position: sticky; bottom: 0; background: white; border-top: 1px solid #ddd;
+    padding: 16px 24px; box-shadow: 0 -2px 6px rgba(0,0,0,0.06); z-index: 50;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+
+  .no-pid-warning {
+    background: #fff3cd; border-left: 4px solid #ffa500; padding: 16px 20px;
+    border-radius: 4px; margin: 24px 0;
+  }
+
+  @media (max-width: 600px) {
+    .post-card .coding-grid { grid-template-columns: 1fr; }
+    header h1 { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Session 3 of 3</h1>
+  <div class="progress">Coded: <strong id="progress-count">0</strong> / <strong>51</strong></div>
+  <div class="actions">
+    <a href="index.html"><button class="btn-secondary">← Study home</button></a>
+    <button class="btn-secondary" onclick="openCodebook()">📖 Codebook</button>
+  </div>
+</header>
+
+<main>
+  <div class="pid-banner" id="pid-banner">
+    <div>
+      <span class="pid-label">Coding as:</span>
+      <span class="pid-value" id="pid-display">—</span>
+    </div>
+    <div class="save-status" id="save-status">Loading…</div>
+  </div>
+
+  <div id="no-pid-warning" class="no-pid-warning" style="display:none;">
+    <strong>⚠ Please enter your Prolific ID first.</strong>
+    <p>Return to the <a href="index.html">study home page</a> to enter your Prolific ID before starting this session.</p>
+  </div>
+
+  <div id="posts-container"></div>
+</main>
+
+<div class="footer-bar">
+  <div>
+    <button class="btn-secondary" onclick="window.location.href='index.html'">← Save & return to home</button>
+  </div>
+  <div>
+    <button class="btn-primary" id="btn-mark-complete" disabled onclick="markSessionComplete()">✓ Mark Session 3 as complete</button>
+  </div>
+</div>
+
+<div class="codebook-overlay" id="codebook-overlay" onclick="if(event.target===this) closeCodebook()">
+  <div class="codebook">
+    <button class="close" onclick="closeCodebook()">&times;</button>
+    
+<h2>Codebook Reference</h2>
+
+<h3>What you are coding</h3>
+<p>Each post mentions AI (ChatGPT, GenAI, etc.). For each post, assign 2 codes:</p>
+<ul>
+  <li><strong>Consumer Experience</strong>: what is the human in the post experiencing?</li>
+  <li><strong>AI Role</strong>: what is the AI doing?</li>
+</ul>
+<p>The two codes are independent — answer each one based on what the post says.</p>
+
+<h3>Consumer Experience — five options</h3>
+<table>
+  <tr><th>Code</th><th>Meaning</th></tr>
+  <tr><td><code>EXTENSION</code></td><td>AI helps person do something they could already do — faster/easier/at scale. <em>Could they do this without AI? YES → EXTENSION.</em></td></tr>
+  <tr><td><code>EXPANSION</code></td><td>AI gives a NEW ability. <em>Could they do this without AI? NO → EXPANSION.</em></td></tr>
+  <tr><td><code>RESTRICTION</code></td><td>AI limits autonomy or forces behavior changes.</td></tr>
+  <tr><td><code>REDUCTION</code></td><td>AI erodes existing skills.</td></tr>
+  <tr><td><code>NEUTRAL</code></td><td>No clear consumer experience (news, marketing, announcement). <strong>Default when unsure.</strong></td></tr>
+</table>
+
+<h4>Examples</h4>
+<ul>
+  <li>"I use ChatGPT to write my emails 10x faster" → <code>EXTENSION</code></li>
+  <li>"ChatGPT taught me a new language in a weekend" → <code>EXPANSION</code></li>
+  <li>"BEWARE: ChatGPT can find your address from photos. Stop posting outdoor pics." → <code>RESTRICTION</code></li>
+  <li>"Students using ChatGPT show less critical thinking" → <code>REDUCTION</code></li>
+  <li>"AI Summit 2025 next week!" → <code>NEUTRAL</code></li>
+</ul>
+
+<h3>AI Role — five options</h3>
+<table>
+  <tr><th>Code</th><th>Meaning</th></tr>
+  <tr><td><code>AI_EXTENSION</code></td><td>AI works well, produces useful outputs as intended.</td></tr>
+  <tr><td><code>AI_EXPANSION</code></td><td>AI/its company is growing, profiting, expanding reach.</td></tr>
+  <tr><td><code>AI_RESTRICTION</code></td><td>AI blocks, refuses, censors, or resists.</td></tr>
+  <tr><td><code>AI_REDUCTION</code></td><td>AI fails, breaks, hallucinates, or degrades.</td></tr>
+  <tr><td><code>NEUTRAL</code></td><td>No clear AI role expressed.</td></tr>
+</table>
+
+<h3>The hardest call: EXTENSION vs EXPANSION</h3>
+<p><strong>Could the person plausibly have done this task before AI existed (just slower or with more effort)?</strong></p>
+<ul>
+  <li>YES → <code>EXTENSION</code> (existing ability amplified)</li>
+  <li>NO → <code>EXPANSION</code> (new ability created)</li>
+</ul>
+
+<h3>Important rules</h3>
+<ol>
+  <li><strong>Code what the post SAYS</strong>, not whether it's true.</li>
+  <li><strong>Code the dominant framing.</strong> If genuinely balanced → NEUTRAL.</li>
+  <li><strong>NEUTRAL is the safe default.</strong> If you're stuck or unclear, NEUTRAL is correct.</li>
+  <li><strong>Sarcasm/jokes:</strong> code the underlying point.</li>
+  <li><strong>Spam, marketing, off-topic, non-English:</strong> NEUTRAL on both AND tick "Off-topic: Yes".</li>
+</ol>
+
+<h3>Quality checks</h3>
+<p>Some posts are <strong>calibration posts</strong> with known correct answers. Failing more than 2 may result in non-acceptance. Read each post carefully — do not skim.</p>
+
+  </div>
+</div>
+
+<script>
+const POSTS = [{"position": 1, "post_id": "1114341494194565", "text": "Nick Cave, a famous singer-songwriter, considers ChatGPT, a viral chatbot, annoying – so much that he found the time to ruthlessly call out this artificial intelligence-based feature as a “grotesque mockery of what it is to be human.”", "kind": "real"}, {"position": 2, "post_id": "1413302880177415", "text": "👀The moment it clicked for me?\n\nWhen I realized I don’t have to design every product, write every word, or hustle 24/7 to make sales.\n\n➡️After 2 years of doing it ALL by myself and creating hunnnnndreds of digital products and selling over 22 000 digital products I was starting to feel burned out…\n\nI needed to AMPLIFY myself - I needed to be able to do more with the time I had!\n\nSo I decided to train AI and smart systems to help me along the way!\n\n✅I use AI to brainstorm and build.\n✅I use automation to sell while I’m offline.\n\nI even offer an affiliate link to a fully set-up system so others can copy the blueprint and you get to create an income from this while you build your own products!\n\nThis is how I started stacking that digital wealth!\n\nIf you’re ready to:\n✅ Create digital products faster\n✅ Automate your content + sales\n✅ Set up a business TODAY\n\n…then MMAI is literally what you’ve been waiting for.\n\nComment “MMAI” below and I’ll DM you everything you need to get started smarter, not slower.", "kind": "real"}, {"position": 3, "post_id": "1214153360639064", "text": "NEW PACKAGE LIST \nNEW YEAR END PROMO \n\n1200\n\nPACKAGE LIST 2\n\nPATERN LIST PSD\n\n🟨MENS PATTERN \n➡️BASKETBALL\n🟨NBA CUT\n🟨2018/2019/2021\n➡️CYCLING\n➡️EURO NECK\n➡️FOOTBALL \n➡️HOODIE\n➡️PANTS\n➡️POLOSHIRT\n➡️RAGLAN\n➡️RAGLAN HOODIE\n➡️RAGLAN R NECK\n➡️RAGLAN VNECK\n➡️RAZOR BACK\n➡️REVERSANLE PATTERN\n➡️RASH GUARD\n➡️SHOORT SLEEVE RN\n➡️SHOORT SLEEVE VN\n➡️SHORT PATTERN\n➡️SINGLET\n➡️TENNIS\n➡️BADMENTON\n➡️VALLEYBALL\n➡️POLO HOODIE\n➡️LONG SLEEVE  COLLAR\n➡️LONGSLEEVE  ZIPPER\n➡️BASKETBALL WITH BOTONES\n\n🟨WOMENS PATTERN\n➡️HOODIES\n➡️JAGGING PANTS\n➡️POLO SHIRT\n➡️RAGLAN\n➡️RAGLAN VNECK\n➡️SHORT PATTERN\n➡️SHORT SLEEVE \n➡️SLEEVELESS\n➡️RAZORBACK\n➡️TANKTOP\n➡️DREES PATTERN V1\n➡️DRESS PATTERN V2\n➡️LONGSLEEVE \n➡️NIGHTIES SHORT\n➡️VALLEYBALL\n➡️RAGLAN VALLEYBALL VN\n➡️RAGLAN VALLEYBALL RN\n\n🟨OTHER PATTERN\n➡️FACEMASK\n➡️ARMSLEEVE\n➡️DUFFLE BAG\n➡️STRING BAG\n➡️ETC....\n\n🟥ACTUAL SIZE EDITABLE  PATTERN\n\nMOCKUP PACKAGE LIST 2\n \n🟨MOCKUP 3D EDITABLE \n➡️VALLEYBALL\n➡️TSHIRT ROUND NECK\n➡️TUBEMASK\n➡️SHORT CYCLING\n➡️SANDO MENS\n➡️POLO ZIPPER\n➡️POLO SHIRT\n➡️LONG SLEEVE\n➡️JERSEY VNECK\n➡️JERSEY BIKE MOCKUP\n➡️JACKET\n➡️FACEMASK\n➡️CHINESE COLLAR\n➡️BOMBER JACKET\n➡️BALACKLAVA\n➡️ARM SLEEVE\n➡️SHORT CYCLING\n➡️HOODIE\n➡️SWEATSHIRT \n➡️VARSITY \n➡️HOODIE WITH ZIPPER \n➡️RACING SUIT\n➡️BUSINESS  CARD\n➡️FABRIC LABEL\n➡️FLAG BANNER\n➡️FOOD DILIVER BOX\n➡️MUGS\n➡️PILLOW\n➡️PIN\n➡️PIZZA BOX\n➡️SLIPPERS\n➡️NBA CUT MOCKUP\n➡️NBA SHORT\n➡️SOCKER\n➡️BASEBALL \n➡️VOLLEYBALL \n➡️TENNIS\n➡️ETC......\n\nPACKAGE 2 ABSTRACT 2\n\n🟨ABSTACT  PACKAGE\n➡️700PLUS TSHIRT ABSTRACT \n➡️50+ POLO ABSTRACT\n➡️100+ LONGSLEEVE  ABSTRACT \n➡️100+ CYCLING ABSTRACT \n➡️100PLUS SET ABSTRACT \n\n🟥AI AND CDR EDITABLE", "kind": "real"}, {"position": 4, "post_id": "1850987212229729", "text": "AI-Driven Manufacturing: #BMW’s Smart Factories\n.\n.\n.\n.\n.\nBMW is not just using AI in its cars—it’s also integrating AI into its production facilities.", "kind": "real"}, {"position": 5, "post_id": "1370579483910016", "text": "Geoffrey Hinton, known as the “godfather of AI” is leaving his role at Google, and plans to warn of the risks of the technology he’s long promoted.", "kind": "real"}, {"position": 6, "post_id": "8736773086339172", "text": "Bamboo raft gets stuck!      #fypシ゚ #foryou #MarkZuckerberg #Chatgpt #reels #viral #funny #everyone #new #usa #eng #mexico #brazil #turkey #fra #indonesia #philippines #columbia #thailand #KRO #usa #uk #japan4 #india", "kind": "real"}, {"position": 7, "post_id": "898722019455311", "text": "Dreamy Love 💖 Photography 🥀AI💐💝💕Art🌺🌷 Couple💘🥀❣️🌹Best🌷 Couple💞Photo\n🩵💘💖 Follow my page 💞💕💚\n💚\n\n#facebookphoto \n#facebook #instaphoto \n#instagood #instagram \n#photography #photo \n#facebookpost #photooftheday\n #trending #love #instadaily \n#photoshoot #instalike \n#instamood \n#like #pinterestpin \n#twittericon #etsyshoplisting \n#pinterestbanner \n#instagrampostideas \n#etsybanner #twitterbanner\n #instagrambanner \n#facebookbanner \n#etsyowner #socialmediabrandingcoach \n#facebookpage #graphicdesignkit\n #pastelinstagram", "kind": "real"}, {"position": 8, "post_id": "1173392151341378", "text": "ChatGPT launches boom in AI-written e-books on Amazon.There were over 200 e-books in Amazon's Kindle store as of mid-February listing ChatGPT as an author or co-author.\n#chatgptai #chatgpt #openai #AI #artificialintelligence #chatbot", "kind": "real"}, {"position": 9, "post_id": "2216482072215697", "text": "Happy weekend Ndioma, come and shop from us today ooh...\n\nWe are located @ Freedom line, Lot2 International market Ai..\n\nCall or WhatsApp via 07067495942..", "kind": "real"}, {"position": 10, "post_id": "1908533250023485", "text": "This weeks updates on AI world.\n\nThe Times of India Oracle Kingdom of Saudi Arabia Oracle User Group The New York Times SAP Forrester", "kind": "real"}, {"position": 11, "post_id": "805700952580685", "text": "Try save yourself, the lion don't need your help #AI", "kind": "real"}, {"position": 12, "post_id": "758858567113693", "text": "Building a Daily Habits Tracking Application with Streamlit and ChatGPT via #TowardsAI → https://towardsai.net/p/l/building-a-daily-habits-tracking-application-with-streamlit-and-chatgpt #MachineLearning #ML #ArtificialIntelligence #MLOps #AI #DataScience #DeepLearning #Technology #Programming #News #Research #Coding #AIDevelopment", "kind": "real"}, {"position": 13, "post_id": "1349092759616594", "text": "The threats to Canada’s sovereignty should not be taken lightly as I have explained. Moreover, if the US were to annex it, a new US constitution could enable any Canadian meeting the requirements, not just any Canadian-born citizen, to run for head of state (in an expanded US) as is the case in Canada already. You may recall that Trump has refused to endorse Vance for 2028 and that he claimed Elon had “political ambitions” and stated “a star is born” in his victory speech. Clearly, this was not to run South Africa. Canadians are right to demand that his passport be revoked (though they would have to change the law to actually do it, and an annexed Canada would reinstate his citizenship) all the more since he insulted PM Trudeau as “no longer Governor of Canada”. If “Canada is not a country” as he foolishly states, which is the same rubbish Putin said about Ukraine before the invasion, then he should not have a passport. \n\nMake no mistake about it: Canadians would fight back with all they have got. They should however start fighting now and decouple from the US as much as possible, while adopting a policy of strategic economic containment and military deterrence. Canada’s leaders at all levels must jettison the docile and naive attitude which got Canada in the perilous position it is in: fawning and ass-kissing is no foreign policy worthy of the largest country on earth to be part of NATO, NAFTA and the G7.  \n\nCanada should increase trade and military partnerships with Mexico, Commonwealth and EU countries and yes, even China, and pursue an aggressive investment policy in AI, on a Manhattan Project scale for Canada, and make it clear that foreigners with expertise in the field will be able to easily bring their loved ones to the country, unlike the US under this administration. Remember that a number of key AI innovators have Canadian citizenship, including Geoff Hinton and Joshua Bengio. I am Canadian too, and I have been repeatedly recognized by the US government as being in the top 1% of my field. My academic granddaddy (Hopfield) won the Nobel Prize in Physics for AI. My academic uncle (Hinton) won the Nobel Prize in Physics for AI. I can do things in AI most people do not know to be currently possible. If people like me start leaving the US, it will be akin to the German physicists leaving for Copenhagen and then the US in the 30s. We all know how that ended for Germany and especially tragically for Japan. \n\nCanada should also militarize as much as possible of its borders with the US, including with swarms of armed drones, as soon as possible, feed it incomplete or misleading intelligence, develop an offshore clandestine nuclear program (North Korea built nukes with a GDP about 1% of Canada’s) including in Mexico which has the capability to build nuclear weapons, and with the UK which has nuclear weapons, and only once its submarines are in possession of a large number of nuclear weapons and delivery systems, announce its withdrawal from the Nuclear Non-Proliferation Treaty while vaporizing a number of remote small frozen islands devoid of wildlife, pretty much like the French did in Mururoa, but with significantly more brutality and on a larger scale in terms of structural damage and without the contamination and loss of life. Mexico could keep a stash of weapons and step out of the NPT, the Tlatelolco Treaty and the TPNW. The wind maps in Canada and the US show that any nuclear attack on population centers in Canada would immediately affect the US. Annexing a nuclear-ready country with conventional weapons is a different ballgame altogether. Russia would never have gone after Ukraine if it had not surrendered its nuclear arsenal via the Budapest Memorandum and would never have threatened it with tactical nuclear weapons. Deterrence goes a long way.\n\nPL\n\nPS. If the UK does not help Canada in its darkest hour, then Canada should, sooner rather than later, announce its complete independence from the UK and become a Republic. Worst case scenario: the Brits arrive and act as a buffer against the US. Last time the US was at war with Britain, the White House was on fire.", "kind": "real"}, {"position": 14, "post_id": "841699955458804", "text": "Editing Course Link:- https://rzp.io/l/CF6KpIyy\n\n₹40,000 worth of audiobook summaries at no cost (Android)\nhttps://play.google.com/store/apps/de...\n\n₹40,000 worth of audiobook summaries at no cost (IoS)\nhttps://apps.apple.com/us/app/gigl-hi...\n\nHow They Became so Rich? | Richest Indian Dark Secrets no one knew | How so Rich?\n\nThis video is a summary of the book \" The pollster king\" that talks about the dark secrets of Reliance and Dhirubhai Ambani. This book is banned in India. Many people think that all the things that are written in this book are true about Ambani's. and some think they are not true. I don't know what do you think? I hope you will love this video.\n\nJai Hind.\n\nMy Whatsapp Channel:- \nhttps://whatsapp.com/channel/0029VaA4...\n_________________________________________________________________\nZerodha Account :- https://zerodha.com/open-account?c=NV...\n_________________________________________________________________\nChatGPT and Youtube course for Premium Members:- \n \n\n / @giglindia \n\nMy Personal Channel\n \n\n / <redacted_mention> \n__________________________________________________________________\nBusiness Books\n\nZero to One: https://amzn.to/3OTWFQn\nDotcom Secrets: https://amzn.to/3PcuL1J\nLaunch: https://amzn.to/3IxsWu7\nThe 80/20 Principle: https://amzn.to/3axUxP8\nThe 22 Immutable Laws Of Branding https://amzn.to/3IqYZMi\nOne Thousand Ways to Make $1000 https://amzn.to/3nNKZCD\nThe Hard Thing About Hard Things https://amzn.to/3yq5k5X\nThe Lean Startup:- https://amzn.to/3ADlagv\n______________________________________________________________\n\nMy Book List 📚 \nhttps://docs.google.com/spreadsheets/...\n_______________________________________________________________\nDoglapan- https://amzn.to/3WJsSge\nMic i Use- https://amzn.to/3XM5al6\n________________________________________________________________", "kind": "real"}, {"position": 15, "post_id": "1448216783501293", "text": "Top 10 most loved airlines in Africa, according to online survey\nhttps://diasporaconnex.com/top-10-most-loved-airlines-in-africa-according-to-online-survey/\n\n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n                \n            \n\n            \n\n            \n                \n                    \n                    \n                        \n                        \n\n                        \n                            \n                                \n                            \n                                \n                            \n                                \n                                    \n                                    \n                                        \n                                    \n                                    \n\n                                    \n                                    \n                                        \n                                            \n                                            \n                                                \n                                                \n                                            \n                                            \n                                                \n                                                    \n                                                    \n                                                    \n    \n    \n    \n    \n        That's why S Money, a research firm, conducted a study to find out which airlines in Africa are the most loved by their customers.\n    \n\n                                                \n                                            \n                                        \n                                    \n                                \n                            \n                                \n                                    \n                                    \n                                        \n                                    \n                                    \n\n                                    \n                                    \n                                        \n                                            \n                                            \n                                            \n                                                \n                                                    \n                                                    \n                                                    \n    \n    \n    \n    \n        Using an AI sentiment tool to analyse thousands of tweets, S Money analysed the major airlines from each African country that operate scheduled flights. \n    \n\n                                                \n                                            \n                                        \n                                    \n                                \n                            \n                                \n                                    \n                                    \n                                        \n                                    \n                                    \n\n                                    \n                                    \n                                        \n                                            \n                                            \n                                            \n                                                \n                                                    \n                                                    \n                                                    \n    \n    \n    \n    \n        They looked at the percentage of positive and negative tweets for each airline and labelled the most loved as the one with the highest percentage of positive tweets.\n    \n\n                                                \n                                            \n                                        \n                                    \n                                \n                            \n                                \n                                    \n                                    \n                                        \n                                            \n                                            \n\n                                            \n\n    \n        \n    \n\n                                        \n                                    \n                                    \n\n                     ", "kind": "real"}, {"position": 16, "post_id": "1959780451231890", "text": "Coldplay tour Top Movie #long time #love me #the hot #girl #drama #Crime #chatgpt #dog #eat #men #love #kali #long #ep1 grow..", "kind": "real"}, {"position": 17, "post_id": "588144947146693", "text": "*NEWSPAPER HEADLINES FOR TUESDAY 27TH MAY 2025*\n\n*PUNCH*\n\nNigeria needs to diversify through industrialisation – NIPC\n\nN2.24bn students fees: Parents, others laud Kano gov\n\nBago inaugurates 20-year dev’t plan, cautions land grabbers\n\nKebbi community accuses official of land grabbing\n\nKano govt leads prayers for Emir Sanusi’s anniversary\n\nKebbi PDP protests party chieftain’s detention\n\nRape suspect defiles, abandons four-year-old girl in refuse dump site\n\nNiger govt accuses radio station of cloning gov’s voice\n\nBauchi declares BECE certificate compulsory for students\n\nInsecurity behind Yobe population decline — Report\n\n34,647 Nigerian pilgrims in Makkah for Hajj – NAHCON\n\nFG, UNDP unveil tool to boost exports to East, Southern Africa\n\nWe'll end Soludo’s one-party rule, says APC candidate\n\nFG inaugurates new board for FMBN\n\nKaduna gov unveils road, breaks 20-year jinx\n\nMay 27: Katsina pledges commitment to children's welfare\n\nTinubu orders 14-day grace period for FCT ground rent defaulters\n\nReps hold valedictory session to honour late colleagues Tuesday\n\nFG targets N1bn annual gas growth, end flaring\n\nIG takes over probe into death of gov's aide\n\nDemolition: Lagos to publish report on Banana Island's illegal buildings\n\nAmnesty boss pledges inclusive programme for Niger Delta communities\n\nNo ID cards, no exams, OAU students ground campus in protest\n\nState electoral commissions demand financial, administrative autonomy\n\nReps summon FCT minister over budget defence\n\nFirm unveils children investment funds \n\nImo lawmaker unveils five bills to spur national development\n\nMakinde urges compassionate tax policy for informal sector\n\nExplosion near Abuja barracks causes panic, one injured\n\nTinubu receives Zulum, FIRS chair, others at Aso Rock Villa\n\nFIRS demands apology from FCTA over Abuja office sealing\n\n*VANGUARD*\n\nLagos issues traffic advisory for ECOWAS summit\n\nBreaking: Tinubu pauses Wike’s property revocations, grants 14-day grace to PDP, others\n\nKano police confirm DPO’s death in aftermath of clash with youths\n\nSaudi deportation: Gumi urges FG to stand up for Nigerians’ rights abroad\n\n‘Man of African origin’ dies in Swiss police station after arrest\n\nGunmen kill policeman, 3 others in Benue\n\nCanadian mining giant opposes Mali move for gold mines\n\nNDLEA, UK’s HOIO sign MoU to strengthen fight against illicit drugs\n\nHow AfDB impacted lives under my stewardship – Adesina \n\nEx-CBN aide reveals no records of alleged $400,000 received for Emefiele\n\nFirst Lady Oluremi Tinubu awards N25m to autistic teenager’s Guinness World Record achievement\n\nAnambra guber polls: Tinubu presents flag to APC candidate, Ukachukwu\n\nPDP slams FG: Sealing our office, a brazen abuse of power\n\nOur reforms ‘ll solve 80% of Nigeria’s bureaucratic challenges – Shettima\n\nLagos to launch building code, urban devt policy; begins CAP programme June 1\n\nTinubu’s 2nd Term: You can’t speak for Igbo – Klinsmann tells MASSOB\n\nOutrage as policeman demands ₦5,000 or fuel from motorists over suspended ECMR\n\nTaraba Killings: Stop violence, it breeds more hatred – CAN\n\nOAU students vow to boycott exam over management’s refusal to issue ID cards\n\nNANS alleges victimisation of student leader in BUK\n\nMutfwang allocates N2bn for construction of 331km rural roads\n\nIgnore protest calls against NAFDAC, police urge Anambra residents\n\nFIRS office closure: Tinubu, Zacch Adedeji meet in Aso Villa\n\n*THE NATION*\n\nTinubu intervenes in FCT ground rent saga, grants defaulters 14-day waiver\n\nFirst Lady awards N25m to autistic teenager's Guinness World Record achievement\n\nInstitutional reforms will resolve 80% of bureaucratic challenges-Shettima\n\nSaudi Arabia Embassy mum on Gumi’s deportation\n\nNo Borno council will fall to insurgents, Zulum vows\n\nSuicide bomber kills self, injures two others in Abuja military Barack\n\nJUST IN: PDP caucus meets in Abuja ahead of Tuesday’s NEC meeting\n\nPolice rescue 80-year-old as operatives neutralise six bandits in Abuja, Jigawa\n\nFG begins payment of N35,000 wage award arrears to federal workers\n\nNAFDAC warns against incitement by social media influencer VDM\n\nTinubu heads to Lagos for ECOWAS at 50 celebrations\n\nInformal sector vital to Nigeria’s economy, says FIRS chairman\n\nAbuja office closure: Tinubu meets FIRS chairman\n\nUniversities that offer admission without JAMB\n\nAlleged N4bn fraud: Judge's absence stalls Anambra ex-Gov Obiano's trial\n\nPolice confirm release of Ikorodu kidnap victims\n\nObi's coalition project affront to party leadership - LP\n\nTinubu committed to re-evaluation of public policies for greater results - Oyetola\n\nFIRS demands apology over invasion of offices by FCTA officials\n\nWhy we conferred doctorate on bank chief, by varsity\n\nLAUTECH: Oyo has paid N5bn out of N8bn to Osun govt - Oyelade\n\nPolice arrest couple for alleged child trafficking, rescue 12 children in Abia\n\nNigeria opens air corridor to Southern Africa to cut export cost by 75%\n\nCatholic priest, female passenger die in Niger flood accident\n\nSaudi bars Islamic cler", "kind": "real"}, {"position": 18, "post_id": "820020241029680", "text": "LSU gymnast and social media influencer Olivia 'Livvy' Dunne is under fire for promoting an AI tool that writes essays for students.", "kind": "real"}, {"position": 19, "post_id": "1424106406028765", "text": "Eid Mubarak \nHappy Eid Day\n#eidmubarak #eidmubarak2025 #EidMubarakEveryone #happyeid #happyeidmubarak Today Best Photo Viral.\n.\n.\n.\n.\n.\n.\n.#waliullahsahibzada\ncelebrity\n#holi\n#holi2025\n#salmankhan\n#bollywood\n#bollywoodstyle\nDISCLAIMER :- AI Generated Image 📸\nThis is ai technology image generate only entertainment purposes 👍\n#viralphotochallenge #todaybestphotochallenge #tiktok\nHere's a comprehensive 5000-word article about BMW:\nIntroduction\nBMW, or Bayerische Motoren Werke, is a renowned German multinational company that produces luxury vehicles and motorcycles. Founded in 1916, BMW has become synonymous with high-performance, innovative design, and exceptional engineering. With a rich history spanning over a century, BMW has established itself as one of the most successful and respected luxury automotive brands in the world.\nEarly Years\nBMW was founded on March 7, 1916, by Franz Josef Popp, Karl Rapp, and Camillo Castiglioni. Initially, the company produced aircraft engines, but after World War I, BMW shifted its focus to motorcycle production. In 1923, BMW introduced its first motorcycle, the R32, which featured a 500cc engine and a revolutionary shaft drive system.\nExpansion and Innovation\nIn the 1930s, BMW began producing automobiles, with the introduction of the BMW 303. The 303 featured a 1.2-liter engine and a sleek, aerodynamic design. Throughout the 1950s and 1960s, BMW continued to innovate and expand its product lineup. The company introduced its first sports car, the BMW 507, in 1956, and its first luxury sedan, the BMW 1500, in 1962.\nModern Era\nIn the 1970s and 1980s, BMW experienced significant growth and expansion. The company introduced its first 3 Series model, the E21, in 1975, which became a huge success. The 1980s saw the introduction of the BMW M3, a high-performance variant of the 3 Series. Throughout the 1990s and 2000s, BMW continued to innovate and expand its product lineup, with the introduction of new models such as the X5 SUV and the 1 Series compact car.\nCurrent Models\nToday, BMW offers a wide range of luxury vehicles, including:\n- 3 Series: A compact luxury sedan available in a range of trim levels, including the 320i, 330i, and M3.\n- 5 Series: A mid-size luxury sedan available in a range of trim levels, including the 530i, 540i, and M5.\n- 7 Series: A full-size luxury sedan available in a range of trim levels, including the 740i, 750i, and M760i.\n- X Series: A range of luxury SUVs, including the X1, X3, X5, and X7.\n- M Series: A range of high-performance variants of BMW models, including the M3, M4, M5, and M8.\nTechnology and Innovation\nBMW is known for its commitment to innovation and technology. The company has developed a range of advanced technologies, including:\n- iDrive: A infotainment system that provides seamless connectivity and entertainment.\n- BMW ConnectedDrive: A suite of connected services that provides real-time traffic information, parking assistance, and more.\n- Autonomous driving: BMW is developing autonomous driving technologies, including Level 3 and Level 4 autonomy.\n- Electric and hybrid vehicles: BMW offers a range of electric and hybrid vehicles, including the i3, iX3, and X5 xDrive45e.\nMotorsport\nBMW has a rich history in motorsport, with successes in a range of disciplines, including:\n- Formula 1: BMW competed in Formula 1 from 1952 to 1954, and again from 2000 to 2009.\n- Touring cars: BMW has competed in a range of touring car championships, including the European Touring Car Championship and the World Touring Car Championship.\n- Endurance racing: BMW has competed in a range of endurance racing events, including the 24 Hours of Le Mans and the 24 Hours of Daytona.\nSustainability\nBMW is committed to sustainability, with a focus on reducing its environmental impact and promoting social responsibility. The company has set a range of sustainability targets, including:\n- Reducing CO2 emissions: BMW aims to reduce its CO2 emissions by 50% by 2025.\n- Increasing electrification: BMW aims to offer 25 electrified models by 2025.\n- Promoting sustainable supply chain management: BMW aims to promote sustainable supply chain management practices throughout its supply chain.\nConclusion\nBMW is a renowned luxury automotive brand with a rich history spanning over a century. From its humble beginnings as a motorcycle manufacturer to its current status as a global leader in the luxury automotive market, BMW has consistently innovated and pushed the boundaries of what is possible. With its commitment to sustainability, technology, and performance, BMW is poised to remain a leader in the luxury automotive market for years to come.\nBest Photo Hashtags:\n#InstaPhotoOfTheDay\n#BestShotOfTheDay\n#PhotoOfTheMoment\n#CapturePerfection\n#DailyDoseOfPhotography\n#BestPhotosEver\n#TodayBestCapture\n#PhotographyAtItsBest\nPhoto Challenge Hashtags:\n#PhotographyContest\n#PhotoChallengeAccepted\n#ShareYourBestShot\n#ClickAndWin\n#PhotographyCompetition\n#CaptureTheBeauty\n#MomentInTime\n#PhotographyCh", "kind": "real"}, {"position": 20, "post_id": "1712082099776818", "text": "Happy Rakhi🧿\n\nCute Krishna with subhadra😊❤️\n.\n.\n.\n.\n\n✅ Original content - @Bhajanshaamsavere \n\n✅ Follow for more content 😊 \n\n✅ Video Creator - @surbhi.001\n\n.\n.\n#ai #krishna #edits #radhekrishna #radheradhe #spritual #bhakti #bhajanshaamsavere #radharani #reels #trending #viralreels #instatrending #aiart #flute #peacock #surbhiaiart #aiartbysurbhi #janmastami #birthday #krishnasbirthday #rakhi #rakshabandhan #bhaibehen #9aug", "kind": "real"}, {"position": 21, "post_id": "1169892831856843", "text": "Each day, AI art becomes increasingly popular. So we'd like to take a moment to showcase 5 artists and projects who are making a mark in the NFT space.", "kind": "real"}, {"position": 22, "post_id": "1860005304952916", "text": "The authors called ChatGPT a “massive commercial enterprise” that is reliant upon mass scale systematic theft.", "kind": "real"}, {"position": 23, "post_id": "804396589263266", "text": "What is involved in Artificial Breeding? #eevs #eevsvet #drlouisecosgrove #horsevet #equinevet #horsebreeding #equinebreeding #artificialbreeding #AI", "kind": "real"}, {"position": 24, "post_id": "877716881364194", "text": "*Happy Ganesh Chaturthi Everyone!* \n\nFestival season sale for placement preparation is LIVE.\n\n*Sale is LIVE for 3 days!* 😍\n\n🖥️ A Single Dashboard for all Placement Preparation Needs!\n\n💵 *Subscription starts ₹ 999/-*\n\n🎟️ Limited Seats!\n\n🔥 62.50% Flat Discount!\n\n👬 _Get Additional Group Discount if 2 or more friends are joining together._ 👭\n\n🔗 *Link to Enroll:* Link in Bio 👍\n\n💸 *Coupon Code:* FESTIV\n\n🎯 Brief Contents:\n\n- Quant, Reasoning, Verbal\n- C, C++, Java , Python\n- Data Structures & Algorithms\n- Full-Stack Development\n- Technical & HR Interview with Mock Interviews\n- Aptitude and Coding Mock Tests\n- 50+ Projects\n- AI-ML, IOT, Robotics\n- 25+ Companies Specific Courses\n- Competitive Coding\n- 2000+ Hours of Learning Content\n- Doubt Clearing Support\n- Certificate of Every Course\n- One-to-One Mock Interviews\n\nRegards \nTeam Talent Battle", "kind": "real"}, {"position": 25, "post_id": "981844747506590", "text": "AGI vs. Nukes: Can Science Destroy Humanity? 🤔\n #AI #science #humanity", "kind": "real"}, {"position": 26, "post_id": "4295792450710453", "text": "Key Digital Marketing Trends for 2024\n\nOne thing you can always count on with the digital marketing landscape is that it constantly changes… and moves fast! \n\nOne prime example is the amazing rise in Artificial Intelligence (AI) that we’ve seen. This phenomenon will continue to evolve and impact all areas of marketing in future as well. \n\nThere’s a lot to do to succeed, but if you know the trends coming down the line, it’s easier to plan, strategize, and get ahead of the competition. \n\nexplore the digital marketing trends to watch out for in 2024…\n\n👇 Comment down below and share your insights, experiences, and predictions! Let's get the conversation started! 🚀💡\n\n#digitalmarketing #marketing #startup #business #sales #businessowner #entrepreneur #smallbusiness #growth #startups #ambani #adani #sharktank #sharktankindia #businesscoach", "kind": "real"}, {"position": 27, "post_id": "3320069628155775", "text": "AI - Artificial Intelligence is Dangerous, Killed by Robot. #ai #artificialintelligence #godofai #google #facebook #willsmith #irobot #mircosoft #robot", "kind": "real"}, {"position": 28, "post_id": "1683233846394478", "text": "‘Killing Me!’ Trump Haters Can’t Contain Themselves Over AI-Generated Photos of Cops Nailing and Jailing Trump\n\nhttps://www.mediaite.com/news/killing-me-trump-haters-cant-contain-themselves-over-ai-generated-photos-of-cops-nailing-and-jailing-trump/", "kind": "real"}, {"position": 29, "post_id": "1293560479240542", "text": "#Tb 🥶 Stay disciplined 🔑 Work extremely hard 💪🏾 separate yourself from the completion ✊🏽 #indoor #outdoor #dont #matter #work #grind #motivate #love #inspire #support #basketball #handles #ai #crossover #getoverhere #coach #🧀", "kind": "real"}, {"position": 30, "post_id": "39002252586489", "text": "Maintenance: Humorous set showing AI trying to project painting its own generative facades. Hang on! \n.\n#stablediffusion #controlnet #midjourney #midjourneyai #midjourneyarchitecture #ai #facadedesign", "kind": "real"}, {"position": 31, "post_id": "909083505091434", "text": "No matter how Good AI is gonna get, it will never replace a filmmaker with an actual camera in his hands and a subject in front of him. \nHowever it will be a great tool for creating this like story boards quick, scripts etc.\nAI will only take over filmmakers who aren't skilled", "kind": "real"}, {"position": 32, "post_id": "776291241566776", "text": "Top movie Netflix 2024 #movie #clip #viral #monster #love #netflix #hollywood #marvelcomics #marvel #marvelmovies #ai #magic #ring #usa", "kind": "real"}, {"position": 33, "post_id": "863238552859238", "text": "\"Embark on an innovative journey at our campus AI lab – where sky's the limit! Explore cutting-edge technologies and unleash your potential in our state-of-the-art facilities. Elevate your learning experience with hands-on AI exploration right here on campus.\"\n\nVisit https://skie.live\nOr Call us 01943502108 | 01943502108\nFor Queries Call 8715886669\nVideo By Ehsaan Yousf \n\n#Advertisement With Us Contact: 7006760961\n\n@followers  #SkieClasses #kashmirstudentalerts #kashmiruniversity #kashmiruniversity #Kashmir #kashmirvalley #KNS #JKBOSE #viralpostfb #viralreelsfb #srinagar #AI #robotics", "kind": "real"}, {"position": 34, "post_id": "1071410085074815", "text": "Claim it💐💐💪\nSHARE💝 & FOLLOW❤️\n.\n.\n.\nTen Unknown Facts About #Tesla\nFounding: Tesla was founded in 2003 by engineers Martin Eberhard and Marc Tarpenning,\n not Elon Musk. Musk joined the company as a major investor and became its public face.\nModel Naming Quirk: Tesla’s car lineup follows a playful pattern: Model S, 3, X, and Y.\n Elon Musk has said it was meant to spell \"S3XY,\" with the number 3 replacing an \"E.\"\nBattery Focus: Tesla's breakthrough isn’t just in electric cars but also in battery technology. Tesla has invested heavily in creating\n powerful and long-lasting batteries, not only for cars but also for energy storage solutions like Powerwall.\nAutopilot and Full Self-Driving: Tesla’s Autopilot is an advanced driver-assistance system, but it’s not fully autonomous. The \ncompany is working on Full Self-Driving (FSD) software, which could eventually enable true autonomous driving.\nGigafactories: Tesla operates massive manufacturing plants known as Gigafactories, located in the U.S., China, and\n Germany. These factories are integral to Tesla’s ability to scale production and reduce costs.\nSpaceX Connection: Tesla and SpaceX, both run by Elon Musk, share more than just a CEO. The companies collaborate on technology, and\n SpaceX’s Falcon Heavy rocket even launched a Tesla Roadster into space as part of a 2018 test flight.\nSustainable Vision: Tesla's mission is to accelerate the world’s transition to sustainable energy.\n In addition to electric cars, the company is a leader in solar power and energy storage solutions.\nOver-the-Air Updates: Tesla was the first car manufacturer to allow over-the-air software updates, letting owners\n download new features and improvements to their cars without visiting a dealership.\nAI and Robots: Tesla’s AI Day event introduced Tesla Bot, a humanoid robot designed to handle dangerous or\n repetitive tasks, showcasing Musk’s vision for AI and robotics beyond automobiles.\nEnvironmental Impact#trend", "kind": "real"}, {"position": 35, "post_id": "835068349271089", "text": "The Film business..originality- creativity- etc, will be gone soon at the rate we are going.  The streaming companies and the big film companies are now owned by internet companies- and bean counters, who are only interested in the bottom line- in the stock price...They are not passionate film makers- They are NOT interested in creativity.  Every successful show, written by people will be fed into AI and AI will regurgitate back  those formulas and AI will be able to write a script in five minutes-no more writers rooms- it will be able to edit a film in 5 mins- and no actual actors will be needed either- most of the crew will be gone.  Robots will fill jobs.  Ever cry at the movies?  Well, you will not need to bring tissue any more- because AI doesn't feel anything- isn't moved by anything. Small independent production companies like mine, will hold on to the value system of creativity and artists- and our movies will not make much money- we will lose most distribution, but  will be in small art movie theaters in small towns and continue to make films with little financial reward- because we are passionate about it. We will be the rebels of the film business.  \nAn example?? I get books from people all the time- to make into movies- and honestly, I read about 20-50 pages and know if it is for us.  It usually isn't.  But I was sent a book that I started to read, and which I read in one day,  from cover to cover- weeping as I read- it was so beautiful and wonderful and amazing ... and I was so moved by this book (which has not come out yet- I will tell you when it is), which was so small and surprising, and which hit me so hard, that I started to write the script the next day, without even having the rights!  I  wanted to prove to myself that it could be a script and that it was a movie.  I wrote in a fever for six possessed, 10 hour days- and when I was done, I had a messy first draft, which I gave to three trusted readers- who called me and seemed to be as moved as I was by the script.  I got the rights- and we shall see what happens- but the Book and the  script is imbued with passion that no IA would be able to feel. AI will be able to spit out scripts- it will be able to fill lots of jobs cheaply- But AI doesn't have feelings- \nAI is a socio-path. \nRead the article in the first comment.", "kind": "real"}, {"position": 36, "post_id": "419966257577419", "text": "Coaching is a saturated industry.\n\nIn fact online coaching and consulting is predicted to grow to new heights in coming years as our world moves further and further online.\n\nI absolutely ADORE coaching.\nBut the term can mean so many things.\n\nFor some it’s a hype person or cheerleader.\nOthers it’s being a “guru”.\nOr a “you need me” conversation.\n\nOne woman I was speaking to recently said she was afraid to hire a coach and outsource her power. And I felt that deeply.\n\nBut for me being a “coach” or “consultant” means being a teammate. Leveraging my expertise to supplement yours. Being a mirror, voice of truth, possibility and love. It means investing in your mission- something I hold with reverence.\n\nIt’s being the wind beneath someone’s wings so they can rise to their greatness.\n\nAnd mostly- it’s an honor.\n\nIn a world sprinting to chat gpt and AI- I just want to celebrate all the authentic humans out there committed to bringing others into their power- so they can shine.\n\nKEEP GOING. 🤍🙏\n\nWe need more authenticity in this space.\nWe need more mastery in this space.\nWe need more empowerment, not dependency in this space.\n\nAnd a sincere thank you to not only the examples out there doing this- but to those who have allowed me to be part of their journeys.\n\nIt’s an honor to witness and fuel your greatness.\n🤍🤟\n\n#onlinecoach #entrepreneur #entrepreneurmindset", "kind": "real"}, {"position": 37, "post_id": "25033946809566582", "text": "🤖 Artificial intelligence is expected to be a game changer in 2023, and one #AI program is creating all the buzz. We asked #ChatGPT to help us start a #business. Here’s how it went. #technology", "kind": "real"}, {"position": 38, "post_id": "2094250051349139", "text": "𝗚𝗥𝗘𝗔𝗧 𝗧𝗛𝗜𝗡𝗞𝗘𝗥𝗦 𝗦𝗣𝗘𝗔𝗞: 𝗢𝗟𝗜𝗩𝗘𝗥 𝗖𝗥𝗢𝗠𝗪𝗘𝗟𝗟\nOliver Cromwell was an English general and statesman who led Parliament's armies against King Charles I during the English Civil War and ruled the British Isles as Lord Protector from 1653 to 1658. He simultaneously served as president and prime minister of the new republican commonwealth. Cromwell is one of the most divisive figures in the history of the British Isles, viewed as a regicidal dictator by historians such as David Sharp, a military dictator by Winston Churchill, and a hero of liberty by John Milton, Thomas Carlyle, and Samuel Rawdy Gardiner. His tolerance of Protestant sects did not extend to Catholics; his actions against them in Ireland have been described by some as genocidal or near-genocidal, and his legacy in Ireland is heavily criticised. In a 2002 BBC poll, he was chosen as one of the ten greatest Britons of all time.\n\n𝘛𝘩𝘪𝘴 𝘣𝘪𝘰 𝘸𝘢𝘴 𝘦𝘥𝘪𝘵𝘦𝘥 𝘶𝘴𝘪𝘯𝘨 𝘢𝘳𝘵𝘪𝘧𝘪𝘤𝘪𝘢𝘭 𝘪𝘯𝘵𝘦𝘭𝘭𝘪𝘨𝘦𝘯𝘤𝘦.\n\n#olivercromwell #ai #rpa #clicksniper #tonygavin", "kind": "real"}, {"position": 39, "post_id": "1321227916563232", "text": "Hand in Hand Through Silent Ruins\nUnknown Creator and Media (No Obvious Signature)\nAI Probability: 97.7% According to \"Hive AI Detector\"", "kind": "real"}, {"position": 40, "post_id": "1281359909989865", "text": "Complete guide to top AI careers for 2025's job seekers.  👇 \nP.C: AI Fire", "kind": "real"}, {"position": 41, "post_id": "25001300719538682", "text": "Monu'ia pehee ai Leimoana Fotu . Faka'ilonga nima today, 3years multiple granted today. Congrats", "kind": "real"}, {"position": 42, "post_id": "1663047614677315", "text": "https://bit.ly/40Cn9vS\nAn important next step on our AI journey\n\nIntroducing Bard, Google's experimental conversational AI service powered by LaMDA — plus, new AI features in Search coming soon.", "kind": "real"}, {"position": 43, "post_id": "1574924486938783", "text": "On our first date the man called me fat and pathetic and humiliated me in front of the whole restaurant — but my revenge made him regret everything 😨😢\nI met him on a dating site. He seemed like the man I had been waiting for: cultured, polite, able to write beautiful messages and court me with words.\nWe could talk for hours, and I caught myself smiling at my phone as I reread his messages. With him I felt needed, special.\nWhen he finally asked me out, I said yes without hesitation. My heart was pounding; I prepared carefully: I put on my best dress, curled my hair, did my makeup. I thought this evening would change my life.\nI entered the restaurant with a slight smile, trying to look confident. But the moment I saw him at the table everything changed. He greeted me not with joy or warmth but with a long, contemptuous look that scanned me from head to toe. In his eyes there was coldness and disgust, as if he were looking at something unpleasant rather than a woman.\nI felt my hands trembling, but I still went to the table trying not to show it. He didn’t even bother to hide his attitude.\n“What did you even put on?” he sneered, eyeing my dress. “Your sides are bulging, your stomach shows. Aren’t you ashamed?”\nI froze; it felt like something inside my chest had broken.\n“I wore the best I have,” I answered quietly.\nHe burst out laughing loudly so that the neighboring tables turned to look at us.\n“So that’s your best? My God — I don’t even want to imagine what other rags you have.”\nI stood there with tears welling up, and he didn’t stop:\n“Why did you even message me? Do you think men like me go out with women like you? Let me be clear: I’m not going to pay for you. It’s enough that I saw you in person — and I already regret it.”\nHe spoke loudly, sharply, venomously, on purpose so everyone could hear. His words hit harder than slaps. I couldn’t understand — was this the same man I had talked to at night? The one who wrote about romance, dreams, and said he liked me? Sitting in front of me was a completely different person — cruel and disgusting.\n“‘Baby, I miss you, I want to see you…’” he mocked in a revolting voice. “And that’s why you wanted to meet? So I could look at your pathetic face? It disgusts me even to sit next to you!”\nAt that moment something clicked inside me. Instead of tears, anger came. I didn’t want to be his victim anymore. And unexpectedly even to myself, I did something I do not regret at all. Watch: [in comment] - Made with AI", "kind": "real"}, {"position": 44, "post_id": "789572140746034", "text": "A little weirdness \n\n#ai #aiart #aiartcommunity #aiartwork #midjourney #midjourneyart #midjourneyai #midjourneyv5 #aiweirdness #aiportraits #aiclown", "kind": "real"}, {"position": 45, "post_id": "709777628255342", "text": "Full stack 👍\nFollow us:-@_bca_memes_official\n.\n.\n.\n.\n#bca_haiklu #programmingduniya \n#chatgpt #computerapplications \n#mothersday #motherslove \n#mothersuperior#programmingisfun\n#connectwithcommunity\n#codinglife💻 #bca\n#bcamemesofficial", "kind": "real"}, {"position": 46, "post_id": "159", "text": "BEWARE ❗❗ BEWARE ❗❗\n‼️‼️‼️‼️‼️‼️ THIS IS ALARMING ‼️‼️‼️‼️\n\nCHATGPT can duplicate your GCASH  transaction. So if ever na naay mag pa cash out or naa moy online transaction please check gyud personally sa inyoa account. Not only sa gcash ni ha even sa uban na bank transfer.\n\n#ccto #repost #fyp", "kind": "attention"}, {"position": 47, "post_id": "1088725823198373", "text": "70’s agricultural vehicle from the future, Inspired by tales from the loop (Simon stalenhag) incredible art.\n.\n.\n\n#midjourney #aiart #farming #agriculture #farmingequipment #farmlife #nerd #modernart #conceptart #aicommunity #midjourneyart  #midiournevartwork #midiournevhorror #ai #retro #retroaesthetic #midjourneydesign #aitools #art #futuredesign #supercomputer #future #generativeart\n#80s #midjourneycommunity #midjourneygallery #80sdesign\n#70s", "kind": "real"}, {"position": 48, "post_id": "849470124148141", "text": "Barren landscape on the outside. Generously equipped on the inside.\n\n#AiwaysU5 #YourWayJustElectric #loveyourdrive\n--\nElectricity consumption combined in kWh/100 km: 13.8 (NEDC), 17,0-16,6 (WLTP) CO2 emissions combined: 0 g/km. Further information: https://www.ai-ways.eu/wltp-dat. All images show the Aiways U5 PRIME Model.\n-- \n#aiways #electrifyyourway #thedrivingfeeling #electricdriving #offtonewadventures #electricstyle #outdoor #adventure #driveyourway #carsoftomorrow #yourway #justelectric #winter #snow #readyforwinter", "kind": "real"}, {"position": 49, "post_id": "1412002553800885", "text": "The US Federal Trade Commission (FTC) has launched an investigation into OpenAI over claims of putting personal reputations and data at risk, posing a major setback for the Microsoft-backed startup.\n.\n.\n.\n.\n#us #usfederal #ftc #ai #gpt #chatgpt #startupbusiness #microsoft", "kind": "real"}, {"position": 50, "post_id": "1346294519952016", "text": "It's very easy to understand the logic behind #BrandedMedicines:\n\nDear All,\n\nWe have created a small AI-based video on generic medicine for awareness. Please provide your feedback.If any improvements are required,\n\nThank You\n\nAdm, The voice of Pharmacist", "kind": "real"}, {"position": 51, "post_id": "1985701195618219", "text": "AD “𝐖𝐡𝐚𝐭 𝐚𝐩𝐩𝐬 𝐝𝗼 𝐲𝗼𝐮 𝐮𝐬𝐞 𝐟𝗼𝐫 𝐚𝐥𝐥 𝐭𝐡𝐞 𝐭𝐫𝐚𝐧𝐬𝐢𝐭𝐢𝗼𝐧𝐬?” ➡️➡️➡️ @bazaart \n\nHere is the 𝓉𝓊𝓉ℴ𝓇𝒾𝒶𝓁 and the 𝒶𝓅𝓅𝓈 I use to edit my 🎥📲. You asked and I delivered! As most of you requested tutorial on how “I clone myself” and seriously, I am obsessed with the “ai replace” feature that immediately can change my outfit and background instantly. IYKYK my @vallieraintung is the editor behind my reels and when she highly recommends this #editingapps ,you surely want to save, share and try this! No more spending whole day taking photo, video, and editing. Bazaart is a total game changer!  𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗 𝗡𝗢𝗪 and tag me to show an edit you make with Bazaart (link in BIO) !!!\n\n#MadeWithBazaart #reelstransition #travelinfluencer #instagramcreators #changeoutfit #photohack #howtoeditvideo #howtoeditphoto #videoeditingapp #removebackgroundphotos #howtoedit", "kind": "real"}];
+const SESSION_NUM = 3;
+const STORAGE_KEY = "ijrm_session3_v3";
+const GLOBAL_KEY = "ijrm_global_v3";
+
+const CONSUMER_OPTS = [
+  ["EXTENSION",   "EXTENSION — AI helps with things you could already do (just faster/easier)"],
+  ["EXPANSION",   "EXPANSION — AI lets you do something new you couldn't do before"],
+  ["RESTRICTION", "RESTRICTION — AI is limiting you or forcing you to change behavior"],
+  ["REDUCTION",   "REDUCTION — AI is making you worse at something you used to do"],
+  ["NEUTRAL",     "NEUTRAL — no clear effect on the person (news, marketing, announcement)"],
+];
+const AI_OPTS = [
+  ["AI_EXTENSION",   "AI_EXTENSION — AI works well, produces useful outputs"],
+  ["AI_EXPANSION",   "AI_EXPANSION — AI/its company is growing, profiting, or expanding"],
+  ["AI_RESTRICTION", "AI_RESTRICTION — AI blocks, refuses, censors, or resists"],
+  ["AI_REDUCTION",   "AI_REDUCTION — AI fails, breaks, hallucinates, or degrades"],
+  ["NEUTRAL",        "NEUTRAL — no clear AI role expressed"],
+];
+const CONF_OPTS = [
+  ["HIGH",   "HIGH — the signal is obvious"],
+  ["MEDIUM", "MEDIUM — the code is right but some interpretation involved"],
+  ["LOW",    "LOW — I'm guessing my best (consider NEUTRAL instead?)"],
+];
+
+function loadGlobal() {
+  try { return JSON.parse(localStorage.getItem(GLOBAL_KEY) || "{}"); }
+  catch (e) { return {}; }
+}
+function loadSession() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+  catch (e) { return {}; }
+}
+function saveSession(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function buildOptions(opts, selected) {
+  let html = '<option value="">— pick one —</option>';
+  for (const o of opts) {
+    const value = Array.isArray(o) ? o[0] : o;
+    const label = Array.isArray(o) ? o[1] : o;
+    html += `<option value="${value}"${value === selected ? " selected" : ""}>${label}</option>`;
+  }
+  return html;
+}
+
+function renderPosts() {
+  const data = loadSession();
+  const answers = data.answers || {};
+  const container = document.getElementById("posts-container");
+  let html = "";
+  for (let i = 0; i < POSTS.length; i++) {
+    const p = POSTS[i];
+    const a = answers[p.post_id] || {};
+    html += `
+      <div class="post-card" data-post-id="${p.post_id}" data-idx="${i}">
+        <div class="post-num">Post ${p.position} of ${POSTS.length}</div>
+        <div class="post-text">${escapeHtml(p.text)}</div>
+        <div class="questions">
+          <div class="off-topic-q">
+            <label>1. Is this post clearly spam, off-topic, or non-English?</label>
+            <select data-field="off_topic">${buildOptions([["No","No — this post is readable and on-topic"], ["Yes","Yes — clearly spam, off-topic, or non-English"]], a.off_topic)}</select>
+            <div style="font-size: 12px; color: #555; margin-top: 6px; line-height: 1.4;">
+              Pick "Yes" if the post is unreadable to you (non-English without translation, gibberish, raw URLs only) OR is obviously promotional spam with no substantive content about AI.
+              If you can read it and there's any AI-related observation in it, pick "No" and code it — even if it's marketing-flavored.
+            </div>
+          </div>
+          <div class="auto-coded-notice">
+            ✓ Marked as off-topic. Codes have been auto-filled as NEUTRAL on both dimensions. Change "Yes" to "No" above if you want to code this post manually.
+          </div>
+          <div class="coding-grid">
+            <div>
+              <label>2. Consumer Experience</label>
+              <select data-field="consumer">${buildOptions(CONSUMER_OPTS, a.consumer)}</select>
+            </div>
+            <div>
+              <label>3. Confidence (Consumer)</label>
+              <select data-field="consumer_conf">${buildOptions(CONF_OPTS, a.consumer_conf)}</select>
+            </div>
+            <div>
+              <label>4. AI Role</label>
+              <select data-field="ai">${buildOptions(AI_OPTS, a.ai)}</select>
+            </div>
+            <div>
+              <label>5. Confidence (AI)</label>
+              <select data-field="ai_conf">${buildOptions(CONF_OPTS, a.ai_conf)}</select>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+  container.innerHTML = html;
+
+  for (const card of document.querySelectorAll(".post-card")) {
+    for (const sel of card.querySelectorAll("select")) {
+      sel.addEventListener("change", onAnswerChange);
+    }
+    // Apply gate state for posts that already have off-topic saved
+    applyGate(card);
+  }
+  updateProgress();
+}
+
+function applyGate(card) {
+  const offTopicSel = card.querySelector("select[data-field='off_topic']");
+  const codingGrid = card.querySelector(".coding-grid");
+  const autoNotice = card.querySelector(".auto-coded-notice");
+  const subSelects = card.querySelectorAll(".coding-grid select");
+  const value = offTopicSel.value;
+
+  if (value === "Yes") {
+    // Off-topic: auto-fill the 4 dropdowns and hide the grid behind a notice
+    for (const sel of subSelects) {
+      const field = sel.dataset.field;
+      if (field === "consumer" || field === "ai") sel.value = "NEUTRAL";
+      else if (field === "consumer_conf" || field === "ai_conf") sel.value = "HIGH";
+      sel.disabled = true;
+    }
+    codingGrid.style.display = "none";
+    autoNotice.style.display = "block";
+  } else if (value === "No") {
+    // Active coding: enable the dropdowns. If they were auto-filled by a previous
+    // "Yes" selection (i.e. consumer===NEUTRAL && ai===NEUTRAL && both confs===HIGH),
+    // clear them so the coder has to consciously code.
+    const wasAutoFilled = (
+      card.querySelector("[data-field='consumer']").value === "NEUTRAL" &&
+      card.querySelector("[data-field='ai']").value === "NEUTRAL" &&
+      card.querySelector("[data-field='consumer_conf']").value === "HIGH" &&
+      card.querySelector("[data-field='ai_conf']").value === "HIGH"
+    );
+    if (wasAutoFilled && card.dataset.lastOffTopic === "Yes") {
+      for (const sel of subSelects) { sel.value = ""; }
+    }
+    for (const sel of subSelects) { sel.disabled = false; }
+    codingGrid.style.display = "grid";
+    autoNotice.style.display = "none";
+  } else {
+    // Not yet answered — hide the coding grid and notice
+    codingGrid.style.display = "none";
+    autoNotice.style.display = "none";
+    for (const sel of subSelects) { sel.disabled = false; }
+  }
+  card.dataset.lastOffTopic = value;
+}
+
+function gatherAnswers() {
+  const answers = {};
+  for (const card of document.querySelectorAll(".post-card")) {
+    const pid = card.dataset.postId;
+    const a = {};
+    for (const sel of card.querySelectorAll("select")) {
+      a[sel.dataset.field] = sel.value;
+    }
+    answers[pid] = a;
+  }
+  return answers;
+}
+
+function isPostComplete(a) {
+  return a && a.consumer && a.consumer_conf && a.ai && a.ai_conf && a.off_topic;
+}
+
+function updateProgress() {
+  const answers = gatherAnswers();
+  let n = 0;
+  for (const card of document.querySelectorAll(".post-card")) {
+    const pid = card.dataset.postId;
+    const complete = isPostComplete(answers[pid]);
+    card.classList.toggle("complete", complete);
+    if (complete) n++;
+  }
+  document.getElementById("progress-count").textContent = n;
+  document.getElementById("btn-mark-complete").disabled = (n !== POSTS.length);
+}
+
+let saveTimer = null;
+function saveAll() {
+  const data = loadSession();
+  data.answers = gatherAnswers();
+  data.posts_snapshot = POSTS;  // so the index can build the combined CSV
+  data.last_saved = new Date().toISOString();
+  saveSession(data);
+  document.getElementById("save-status").textContent = "All changes saved · " + new Date().toLocaleTimeString();
+}
+
+function onAnswerChange(event) {
+  // If the off-topic field changed, re-apply the gate first (which may auto-fill
+  // or clear the other 4 dropdowns) BEFORE we save and update progress.
+  if (event && event.target && event.target.dataset.field === "off_topic") {
+    const card = event.target.closest(".post-card");
+    applyGate(card);
+  }
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { saveAll(); updateProgress(); }, 200);
+  updateProgress();
+}
+
+function markSessionComplete() {
+  const data = loadSession();
+  data.answers = gatherAnswers();
+  data.posts_snapshot = POSTS;
+  data.marked_complete = true;
+  data.completed_at = new Date().toISOString();
+  saveSession(data);
+  alert(`Session ${SESSION_NUM} marked as complete!\n\nReturn to the study home page to continue with the other sessions.`);
+  window.location.href = "index.html";
+}
+
+function openCodebook() { document.getElementById("codebook-overlay").classList.add("show"); }
+function closeCodebook() { document.getElementById("codebook-overlay").classList.remove("show"); }
+
+window.addEventListener("DOMContentLoaded", () => {
+  const g = loadGlobal();
+  if (!g.prolific_id || g.prolific_id.length < 8) {
+    document.getElementById("no-pid-warning").style.display = "block";
+    document.getElementById("posts-container").style.display = "none";
+    document.getElementById("pid-banner").style.display = "none";
+    return;
+  }
+  document.getElementById("pid-display").textContent = g.prolific_id;
+  document.getElementById("save-status").textContent = "Loaded.";
+  renderPosts();
+});
+</script>
+</body>
+</html>

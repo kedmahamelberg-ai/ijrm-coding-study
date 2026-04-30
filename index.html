@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Posts Coding Study — Welcome</title>
+<style>
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0; padding: 0; background: #f5f7fa; color: #1a1a1a; line-height: 1.5;
+  }
+  header {
+    position: sticky; top: 0; background: #1f3864; color: white; padding: 12px 24px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1); z-index: 100;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  header a { color: white; text-decoration: none; font-size: 14px; padding: 6px 10px; border-radius: 4px; }
+  header a:hover { background: rgba(255,255,255,0.15); }
+  .progress { font-size: 14px; }
+  .progress strong { font-size: 16px; }
+  main { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+  button {
+    padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+    font-weight: 500;
+  }
+  .btn-primary { background: #28a745; color: white; }
+  .btn-primary:disabled { background: #6c757d; cursor: not-allowed; opacity: 0.7; }
+  .btn-primary:not(:disabled):hover { background: #218838; }
+  .btn-secondary { background: white; color: #1f3864; border: 1px solid #ccc; }
+  .btn-secondary:hover { background: #e6e9f0; }
+
+  .intro {
+    background: white; border-radius: 8px; padding: 24px 28px; margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .intro h2 { margin-top: 0; color: #1f3864; }
+  .intro label { display: block; margin-top: 16px; font-weight: 600; }
+  .intro input[type=text] {
+    width: 100%; padding: 10px; border: 2px solid #ccc; border-radius: 4px; font-size: 14px;
+    font-family: monospace;
+  }
+  .intro input[type=text]:invalid { border-color: #ffa500; }
+  .intro .hint { font-size: 13px; color: #666; margin-top: 4px; }
+
+  .session-card {
+    background: white; border-radius: 8px; padding: 20px 24px; margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 4px solid #d0d4dc;
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    transition: border-color 0.2s;
+  }
+  .session-card.in-progress { border-left-color: #ffa500; }
+  .session-card.complete { border-left-color: #28a745; }
+  .session-card.locked { opacity: 0.5; }
+  .session-card .info h3 { margin: 0 0 4px 0; font-size: 17px; }
+  .session-card .info .meta { font-size: 13px; color: #666; }
+  .session-card .status {
+    font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 12px;
+    background: #eef0f3; color: #666; white-space: nowrap;
+  }
+  .session-card.in-progress .status { background: #fff3cd; color: #856404; }
+  .session-card.complete .status { background: #d4edda; color: #155724; }
+  .session-card .actions { display: flex; gap: 8px; align-items: center; }
+
+  .submission-panel {
+    background: white; border-radius: 8px; padding: 24px 28px; margin-top: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 2px solid #28a745;
+    display: none;
+  }
+  .submission-panel.show { display: block; }
+  .submission-panel h2 { margin-top: 0; color: #28a745; }
+  .submission-panel h3 { color: #1f3864; margin-top: 24px; margin-bottom: 8px; font-size: 16px; }
+  .completion-code-box {
+    background: #f5f7fa; border: 1px solid #ccc; border-radius: 4px; padding: 16px;
+    font-family: monospace; font-size: 18px; font-weight: 600; text-align: center;
+    margin: 12px 0; user-select: all;
+  }
+  .submission-panel ol { margin: 8px 0; padding-left: 24px; }
+  .submission-panel li { margin-bottom: 6px; }
+  .copyable {
+    background: #f5f7fa; border: 1px solid #ccc; border-radius: 4px; padding: 10px 14px;
+    font-family: monospace; font-size: 14px; display: flex; justify-content: space-between;
+    align-items: center; gap: 12px; margin: 6px 0;
+  }
+  .copyable .text { user-select: all; flex: 1; word-break: break-all; }
+  .copyable .copy-btn {
+    background: #1f3864; color: white; border: none; border-radius: 3px;
+    padding: 4px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;
+  }
+  .copyable .copy-btn:hover { background: #2a4a85; }
+  .copyable .copy-btn.copied { background: #28a745; }
+  .step-block {
+    background: #f8f9fa; border-left: 3px solid #1f3864; padding: 14px 18px;
+    margin: 12px 0; border-radius: 4px;
+  }
+  .step-block .step-num {
+    display: inline-block; background: #1f3864; color: white; width: 24px; height: 24px;
+    border-radius: 50%; text-align: center; line-height: 24px; font-weight: 600;
+    margin-right: 8px; font-size: 13px;
+  }
+  .deadline-warning {
+    background: #fff3cd; border-left: 4px solid #d97706; padding: 14px 18px;
+    border-radius: 4px; margin: 16px 0; font-size: 14px; color: #78350f;
+  }
+  .deadline-warning strong { color: #92400e; }
+
+  .save-status { font-size: 12px; color: #666; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AI Posts Coding Study</h1>
+  <div class="progress">Sessions complete: <strong id="sessions-complete">0</strong> / 3</div>
+</header>
+
+<main>
+  <div class="intro">
+    <h2>Welcome — please read this first</h2>
+    <p>This study has <strong>3 sessions</strong>, each containing about 50 posts to code. Total time is approximately <strong>2-3 hours</strong>, but you can pause and resume anytime — your work is saved automatically.</p>
+
+    <p><strong>To complete this study and receive payment:</strong></p>
+    <ol>
+      <li>Enter your Prolific ID below.</li>
+      <li>Complete all 3 sessions in any order. Each session takes ~45-60 minutes.</li>
+      <li>When all 3 sessions are done, return here to download your combined results file.</li>
+      <li><strong>Email the file to the researcher</strong> (instructions and email link will appear here when you're done).</li>
+      <li>Submit the completion code on Prolific.</li>
+    </ol>
+    <div class="deadline-warning" style="margin-top: 14px;">
+      <strong>Important:</strong> Your submission will only be accepted after we receive your CSV file by email. If you do not email the file within <strong>4 hours</strong> of submission, your work may be rejected.
+    </div>
+
+    <label for="prolific-id">Your Prolific ID (~24 characters)</label>
+    <input type="text" id="prolific-id" placeholder="e.g. 5f7d8e9c1a2b3c4d5e6f7a8b" maxlength="40" autocomplete="off">
+    <div class="hint">This is the only personal data we collect. You only need to enter this once — it will be remembered for all sessions.</div>
+    <div class="save-status" id="save-status">Enter your Prolific ID to begin.</div>
+  </div>
+
+  <div class="intro">
+    <h2 style="margin-top: 0;">How the coding interface works</h2>
+    <p>For each post, you will answer 5 questions. Question 1 is a simple gate question:</p>
+
+    <div style="background: #f8f9fa; border-left: 3px solid #1f3864; padding: 14px 18px; border-radius: 4px; margin: 14px 0;">
+      <strong>Q1: Is this post clearly spam, off-topic, or non-English?</strong>
+      <ul style="margin: 8px 0 4px 0; padding-left: 22px; font-size: 14px;">
+        <li><strong>Yes</strong> — pick this only if the post is unreadable to you (non-English without translation, gibberish, raw URLs only) OR is obviously promotional spam with no substantive content about AI. The other 4 questions will be answered automatically and you move on.</li>
+        <li><strong>No</strong> — pick this if you can read the post and there's any AI-related observation in it, even if it's marketing-flavored. The other 4 questions will appear so you can code it.</li>
+      </ul>
+    </div>
+
+    <p>If you answer "No" to Q1, you will then assign codes for:</p>
+    <ul style="font-size: 14px;">
+      <li><strong>Consumer Experience</strong> (Q2) — what is the human in the post experiencing?</li>
+      <li><strong>AI Role</strong> (Q4) — what is the AI doing?</li>
+      <li>Plus your <strong>confidence</strong> for each (Q3 and Q5).</li>
+    </ul>
+    <p style="font-size: 14px;">The full coding manual is one click away from any session — look for the <strong>📖 Codebook</strong> button at the top of the page.</p>
+
+    <h3 style="color: #1f3864; font-size: 16px; margin-top: 20px;">Visual signals</h3>
+    <ul style="font-size: 14px;">
+      <li>The left edge of each post card turns <strong style="color: #28a745;">green</strong> when you've fully coded that post.</li>
+      <li>The progress counter at the top of the page shows how many posts you've completed.</li>
+      <li>Your work is saved automatically — you can refresh, close the tab, or come back tomorrow without losing progress.</li>
+      <li>The "Mark Session N as complete" button at the bottom of each session is enabled only when ALL posts in that session show green.</li>
+    </ul>
+  </div>
+
+  <h3 style="color: #1f3864;">Sessions</h3>
+  <div id="session-list"></div>
+
+  <div class="submission-panel" id="submission-panel">
+    <h2>🎉 All 3 sessions complete!</h2>
+    <p>Three steps to submit, in order. Please follow them carefully — payment depends on it.</p>
+
+    <div class="step-block">
+      <h3><span class="step-num">1</span>Download your results file</h3>
+      <p style="margin: 6px 0 12px 0; font-size: 14px;">Click below. The file (<code id="filename-preview">coding_all_sessions_YOURID.csv</code>) will be saved to your Downloads folder.</p>
+      <button class="btn-primary" id="btn-download" onclick="downloadCombinedCSV()" style="font-size: 16px; padding: 12px 24px;">⬇ Download combined CSV</button>
+    </div>
+
+    <div class="step-block">
+      <h3><span class="step-num">2</span>Email the file to the researcher</h3>
+      <p style="margin: 6px 0; font-size: 14px;">Open your email app, attach the CSV file you just downloaded, and send it with these exact details:</p>
+
+      <div style="font-size: 13px; color: #666; margin-top: 12px;">To:</div>
+      <div class="copyable">
+        <span class="text" id="email-to">kedma@hamelberg-ai.com</span>
+        <button class="copy-btn" onclick="copyText('email-to', this)">Copy</button>
+      </div>
+
+      <div style="font-size: 13px; color: #666; margin-top: 12px;">Subject:</div>
+      <div class="copyable">
+        <span class="text" id="email-subject">AI Coding — YOUR_PROLIFIC_ID</span>
+        <button class="copy-btn" onclick="copyText('email-subject', this)">Copy</button>
+      </div>
+
+      <p style="margin: 14px 0 8px 0; font-size: 14px;">Or click the button below to open your email app with everything pre-filled (you'll just need to attach the CSV file):</p>
+      <a id="mailto-link" href="#"><button class="btn-primary" style="font-size: 15px; padding: 10px 20px;">📧 Open email app</button></a>
+
+      <div class="deadline-warning" style="margin-top: 16px;">
+        <strong>4-hour deadline:</strong> Your submission will only be accepted after we receive your CSV by email. If we don't receive it within 4 hours of your Prolific submission, your work may be rejected.
+      </div>
+    </div>
+
+    <div class="step-block">
+      <h3><span class="step-num">3</span>Return to Prolific and submit the completion code</h3>
+      <p style="margin: 6px 0 8px 0; font-size: 14px;">Only after sending the email above, paste this code into Prolific:</p>
+      <div class="completion-code-box" id="completion-code">IJRM2026FINAL</div>
+    </div>
+
+    <p style="font-size: 13px; color: #666; margin-top: 20px; text-align: center;">You will not receive a confirmation email. Your submission will be reviewed and approved on Prolific within 48 hours. Thank you for participating in this research!</p>
+  </div>
+</main>
+
+<script>
+const SESSIONS = [{"num": 1, "n_posts": 52}, {"num": 2, "n_posts": 52}, {"num": 3, "n_posts": 51}];
+const COMPLETION_CODE = "IJRM2026FINAL";
+const GLOBAL_KEY = "ijrm_global_v3";
+const SESSION_KEY = (n) => `ijrm_session${n}_v3`;
+
+function loadGlobal() {
+  try { return JSON.parse(localStorage.getItem(GLOBAL_KEY) || "{}"); }
+  catch (e) { return {}; }
+}
+function saveGlobal(g) { localStorage.setItem(GLOBAL_KEY, JSON.stringify(g)); }
+function loadSessionData(n) {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY(n)) || "{}"); }
+  catch (e) { return {}; }
+}
+
+function isPostComplete(a) {
+  return a && a.consumer && a.consumer_conf && a.ai && a.ai_conf && a.off_topic;
+}
+
+function sessionStatus(n) {
+  const data = loadSessionData(n);
+  const meta = SESSIONS.find(s => s.num === n);
+  if (!data.answers) return {state: "not-started", coded: 0, total: meta.n_posts};
+  const answered = Object.values(data.answers).filter(isPostComplete).length;
+  if (answered === 0) return {state: "not-started", coded: 0, total: meta.n_posts};
+  if (answered < meta.n_posts) return {state: "in-progress", coded: answered, total: meta.n_posts};
+  // All answered AND coder explicitly marked complete via the session page
+  if (data.marked_complete) return {state: "complete", coded: meta.n_posts, total: meta.n_posts};
+  return {state: "in-progress", coded: meta.n_posts, total: meta.n_posts, ready_to_mark: true};
+}
+
+function renderSessionList() {
+  const pid = document.getElementById("prolific-id").value.trim();
+  const hasPid = pid.length >= 8;
+
+  let html = "";
+  let nComplete = 0;
+  for (const s of SESSIONS) {
+    const status = sessionStatus(s.num);
+    if (status.state === "complete") nComplete++;
+
+    let label = "Not started";
+    if (status.state === "in-progress") {
+      label = status.ready_to_mark
+        ? `Filled in (please mark as complete on the session page)`
+        : `${status.coded} of ${status.total} coded`;
+    }
+    if (status.state === "complete") label = "✓ Complete";
+
+    const btnText = status.state === "complete"
+      ? "Review"
+      : (status.state === "in-progress" ? "Continue" : "Start");
+
+    const disabled = !hasPid;
+    html += `
+      <div class="session-card ${status.state} ${disabled ? "locked" : ""}">
+        <div class="info">
+          <h3>Session ${s.num} of 3</h3>
+          <div class="meta">${s.n_posts} posts · ~45-60 minutes</div>
+        </div>
+        <div class="status">${label}</div>
+        <div class="actions">
+          <a href="session${s.num}.html" ${disabled ? 'onclick="alert(\'Please enter your Prolific ID first.\'); return false;"' : ""}>
+            <button class="btn-${status.state === "complete" ? "secondary" : "primary"}">${btnText}</button>
+          </a>
+        </div>
+      </div>`;
+  }
+  document.getElementById("session-list").innerHTML = html;
+  document.getElementById("sessions-complete").textContent = nComplete;
+  document.getElementById("submission-panel").classList.toggle("show", nComplete === 3 && hasPid);
+
+  // Update the email subject/filename/mailto link with the actual Prolific ID
+  if (hasPid) {
+    const subject = `AI Coding — ${pid}`;
+    const filename = `coding_all_sessions_${pid.replace(/[^a-zA-Z0-9]/g, "")}.csv`;
+    const body = `Hello,\n\nPlease find attached my completed coding CSV for the AI posts study.\n\nProlific ID: ${pid}\nCompletion code: ${COMPLETION_CODE}\nFile: ${filename}\n\n(Make sure to attach the CSV file before sending — it should be in your Downloads folder.)\n\nThank you,\nProlific Coder ${pid}`;
+
+    const subjEl = document.getElementById("email-subject");
+    if (subjEl) subjEl.textContent = subject;
+    const fnEl = document.getElementById("filename-preview");
+    if (fnEl) fnEl.textContent = filename;
+    const mailto = document.getElementById("mailto-link");
+    if (mailto) {
+      mailto.href = `mailto:kedma@hamelberg-ai.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+  }
+}
+
+function copyText(elementId, btn) {
+  const text = document.getElementById(elementId).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = "✓ Copied";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.classList.remove("copied");
+    }, 1500);
+  }).catch(() => {
+    // Fallback for clipboard API failure: select the text
+    const range = document.createRange();
+    range.selectNode(document.getElementById(elementId));
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  });
+}
+
+function csvEscape(s) {
+  if (s == null) return "";
+  s = String(s);
+  if (s.includes(",") || s.includes('"') || s.includes("\n") || s.includes("\r")) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function downloadCombinedCSV() {
+  const pid = document.getElementById("prolific-id").value.trim();
+  if (!pid) { alert("Please enter your Prolific ID."); return; }
+
+  // Verify all 3 sessions complete
+  for (const s of SESSIONS) {
+    if (sessionStatus(s.num).state !== "complete") {
+      alert(`Session ${s.num} is not yet complete. Please finish all 3 sessions first.`);
+      return;
+    }
+  }
+
+  // Build combined CSV with metadata header rows
+  const lines = [];
+  lines.push(["Your Prolific ID:", pid, "", "", "", "", "", "", ""].map(csvEscape).join(","));
+  lines.push(["Completion code:", COMPLETION_CODE, "", "", "", "", "", "", ""].map(csvEscape).join(","));
+  lines.push(["Submitted at:", new Date().toISOString(), "", "", "", "", "", "", ""].map(csvEscape).join(","));
+  lines.push(["", "", "", "", "", "", "", "", ""].join(","));
+  lines.push([
+    "session", "position", "post_id", "post_text",
+    "1. Consumer Experience", "2. Confidence (Consumer)",
+    "3. AI Role", "4. Confidence (AI)",
+    "5. Off-topic / Non-English?"
+  ].map(csvEscape).join(","));
+
+  for (const s of SESSIONS) {
+    const data = loadSessionData(s.num);
+    // We need post metadata too. The session page stored the full posts list under data.posts_snapshot
+    const posts = data.posts_snapshot || [];
+    for (const p of posts) {
+      const a = data.answers[p.post_id];
+      lines.push([
+        s.num, p.position, p.post_id, p.text,
+        a.consumer, a.consumer_conf, a.ai, a.ai_conf, a.off_topic
+      ].map(csvEscape).join(","));
+    }
+  }
+
+  const csv = lines.join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const safePid = pid.replace(/[^a-zA-Z0-9]/g, "");
+  const filename = `coding_all_sessions_${safePid}.csv`;
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  alert(`Downloaded ${filename}\n\nNext steps (shown on the page):\n1. Email the CSV to kedma@hamelberg-ai.com (Step 2 below)\n2. Then return to Prolific and paste code: ${COMPLETION_CODE}\n\nIMPORTANT: We must receive your email within 4 hours of submitting on Prolific, or your work may be rejected.`);
+}
+
+// On page load, populate Prolific ID from storage if it's there
+window.addEventListener("DOMContentLoaded", () => {
+  const g = loadGlobal();
+  if (g.prolific_id) document.getElementById("prolific-id").value = g.prolific_id;
+  document.getElementById("prolific-id").addEventListener("input", () => {
+    const pid = document.getElementById("prolific-id").value.trim();
+    const g = loadGlobal();
+    g.prolific_id = pid;
+    saveGlobal(g);
+    document.getElementById("save-status").textContent = pid.length >= 8
+      ? "Prolific ID saved. You may begin Session 1."
+      : "Enter your Prolific ID to begin.";
+    renderSessionList();
+  });
+  renderSessionList();
+});
+
+// Re-render every 2s in case coder has another tab open
+setInterval(renderSessionList, 2000);
+</script>
+</body>
+</html>
