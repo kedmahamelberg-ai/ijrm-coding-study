@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session 1 of 3 — AI Posts Coding</title>
+<style>
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0; padding: 0; background: #f5f7fa; color: #1a1a1a; line-height: 1.5;
+  }
+  header {
+    position: sticky; top: 0; background: #1f3864; color: white; padding: 12px 24px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1); z-index: 100;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  header a { color: white; text-decoration: none; font-size: 14px; padding: 6px 10px; border-radius: 4px; }
+  header a:hover { background: rgba(255,255,255,0.15); }
+  .progress { font-size: 14px; }
+  .progress strong { font-size: 16px; }
+  main { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+  button {
+    padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+    font-weight: 500;
+  }
+  .btn-primary { background: #28a745; color: white; }
+  .btn-primary:disabled { background: #6c757d; cursor: not-allowed; opacity: 0.7; }
+  .btn-primary:not(:disabled):hover { background: #218838; }
+  .btn-secondary { background: white; color: #1f3864; border: 1px solid #ccc; }
+  .btn-secondary:hover { background: #e6e9f0; }
+
+  .post-card {
+    background: white; border-radius: 8px; padding: 20px 24px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 4px solid #d0d4dc;
+    transition: border-color 0.2s;
+  }
+  .post-card.complete { border-left-color: #28a745; }
+  .post-card .post-num { font-size: 13px; color: #666; font-weight: 600; }
+  .post-card .post-text {
+    margin: 12px 0 20px 0; padding: 14px; background: #f5f7fa; border-radius: 4px;
+    white-space: pre-wrap; word-break: break-word; font-size: 14px;
+    max-height: 400px; overflow-y: auto;
+  }
+  .post-card .questions { display: flex; flex-direction: column; gap: 16px; }
+  .post-card .off-topic-q {
+    padding: 12px 14px; background: #f8f9fa; border-radius: 6px; border: 1px solid #e1e4e8;
+  }
+  .post-card .coding-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .post-card .auto-coded-notice {
+    display: none; padding: 12px 16px; background: #d4edda; border-left: 4px solid #28a745;
+    border-radius: 4px; font-size: 13px; color: #155724; line-height: 1.5;
+  }
+  .post-card label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .post-card select {
+    width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;
+    font-size: 14px; background: white;
+  }
+  .post-card select:disabled {
+    background: #eef0f3; color: #888; cursor: not-allowed;
+  }
+
+  .pid-banner {
+    background: white; border-radius: 8px; padding: 12px 20px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; justify-content: space-between;
+    align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+  .pid-banner .pid-label { font-size: 13px; color: #666; }
+  .pid-banner .pid-value { font-family: monospace; font-weight: 600; }
+  .pid-banner .save-status { font-size: 12px; color: #666; }
+
+  .codebook-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); z-index: 1000; padding: 20px;
+  }
+  .codebook-overlay.show { display: flex; align-items: center; justify-content: center; }
+  .codebook {
+    background: white; max-width: 800px; max-height: 90vh; overflow-y: auto;
+    border-radius: 8px; padding: 24px 32px; position: relative;
+  }
+  .codebook .close {
+    position: absolute; top: 12px; right: 16px; font-size: 28px; cursor: pointer;
+    background: none; border: none; color: #666; line-height: 1;
+  }
+  .codebook h2, .codebook h3 { color: #1f3864; }
+  .codebook table { border-collapse: collapse; width: 100%; margin: 8px 0 16px 0; }
+  .codebook th, .codebook td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+  .codebook th { background: #f5f7fa; }
+  .codebook code { background: #f0f2f5; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+
+  .footer-bar {
+    position: sticky; bottom: 0; background: white; border-top: 1px solid #ddd;
+    padding: 16px 24px; box-shadow: 0 -2px 6px rgba(0,0,0,0.06); z-index: 50;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+
+  .no-pid-warning {
+    background: #fff3cd; border-left: 4px solid #ffa500; padding: 16px 20px;
+    border-radius: 4px; margin: 24px 0;
+  }
+
+  @media (max-width: 600px) {
+    .post-card .coding-grid { grid-template-columns: 1fr; }
+    header h1 { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Session 1 of 3</h1>
+  <div class="progress">Coded: <strong id="progress-count">0</strong> / <strong>77</strong></div>
+  <div class="actions">
+    <a href="index.html"><button class="btn-secondary">← Study home</button></a>
+    <button class="btn-secondary" onclick="openCodebook()">📖 Codebook</button>
+  </div>
+</header>
+
+<main>
+  <div class="pid-banner" id="pid-banner">
+    <div>
+      <span class="pid-label">Coding as:</span>
+      <span class="pid-value" id="pid-display">—</span>
+    </div>
+    <div class="save-status" id="save-status">Loading…</div>
+  </div>
+
+  <div id="no-pid-warning" class="no-pid-warning" style="display:none;">
+    <strong>⚠ Please enter your Prolific ID first.</strong>
+    <p>Return to the <a href="index.html">study home page</a> to enter your Prolific ID before starting this session.</p>
+  </div>
+
+  <div id="posts-container"></div>
+</main>
+
+<div class="footer-bar">
+  <div>
+    <button class="btn-secondary" onclick="window.location.href='index.html'">← Save & return to home</button>
+  </div>
+  <div>
+    <button class="btn-primary" id="btn-mark-complete" disabled onclick="markSessionComplete()">✓ Mark Session 1 as complete</button>
+  </div>
+</div>
+
+<div class="codebook-overlay" id="codebook-overlay" onclick="if(event.target===this) closeCodebook()">
+  <div class="codebook">
+    <button class="close" onclick="closeCodebook()">&times;</button>
+    
+<h2>Codebook Reference</h2>
+
+<h3>What you are coding</h3>
+<p>Each post mentions AI (ChatGPT, GenAI, etc.). For each post, assign 2 codes:</p>
+<ul>
+  <li><strong>Consumer Experience</strong>: what is the human in the post experiencing?</li>
+  <li><strong>AI Role</strong>: what is the AI doing?</li>
+</ul>
+<p>The two codes are independent — answer each one based on what the post says.</p>
+
+<h3>Consumer Experience — five options</h3>
+<table>
+  <tr><th>Code</th><th>Meaning</th></tr>
+  <tr><td><code>EXTENSION</code></td><td>AI helps person do something they could already do — faster/easier/at scale. <em>Could they do this without AI? YES → EXTENSION.</em></td></tr>
+  <tr><td><code>EXPANSION</code></td><td>AI gives a NEW ability. <em>Could they do this without AI? NO → EXPANSION.</em></td></tr>
+  <tr><td><code>RESTRICTION</code></td><td>AI limits autonomy or forces behavior changes.</td></tr>
+  <tr><td><code>REDUCTION</code></td><td>AI erodes existing skills.</td></tr>
+  <tr><td><code>NEUTRAL</code></td><td>No clear consumer experience (news, marketing, announcement). <strong>Default when unsure.</strong></td></tr>
+</table>
+
+<h4>Examples</h4>
+<ul>
+  <li>"I use ChatGPT to write my emails 10x faster" → <code>EXTENSION</code></li>
+  <li>"ChatGPT taught me a new language in a weekend" → <code>EXPANSION</code></li>
+  <li>"BEWARE: ChatGPT can find your address from photos. Stop posting outdoor pics." → <code>RESTRICTION</code></li>
+  <li>"Students using ChatGPT show less critical thinking" → <code>REDUCTION</code></li>
+  <li>"AI Summit 2025 next week!" → <code>NEUTRAL</code></li>
+</ul>
+
+<h3>AI Role — five options</h3>
+<table>
+  <tr><th>Code</th><th>Meaning</th></tr>
+  <tr><td><code>AI_EXTENSION</code></td><td>AI works well, produces useful outputs as intended.</td></tr>
+  <tr><td><code>AI_EXPANSION</code></td><td>AI/its company is growing, profiting, expanding reach.</td></tr>
+  <tr><td><code>AI_RESTRICTION</code></td><td>AI blocks, refuses, censors, or resists.</td></tr>
+  <tr><td><code>AI_REDUCTION</code></td><td>AI fails, breaks, hallucinates, or degrades.</td></tr>
+  <tr><td><code>NEUTRAL</code></td><td>No clear AI role expressed.</td></tr>
+</table>
+
+<h3>The hardest call: EXTENSION vs EXPANSION</h3>
+<p><strong>Could the person plausibly have done this task before AI existed (just slower or with more effort)?</strong></p>
+<ul>
+  <li>YES → <code>EXTENSION</code> (existing ability amplified)</li>
+  <li>NO → <code>EXPANSION</code> (new ability created)</li>
+</ul>
+
+<h3>Important rules</h3>
+<ol>
+  <li><strong>Code what the post SAYS</strong>, not whether it's true.</li>
+  <li><strong>Code the dominant framing.</strong> If genuinely balanced → NEUTRAL.</li>
+  <li><strong>NEUTRAL is the safe default.</strong> If you're stuck or unclear, NEUTRAL is correct.</li>
+  <li><strong>Sarcasm/jokes:</strong> code the underlying point.</li>
+  <li><strong>Spam, marketing, off-topic, non-English:</strong> NEUTRAL on both AND tick "Off-topic: Yes".</li>
+</ol>
+
+<h3>Quality checks</h3>
+<p>Some posts are <strong>calibration posts</strong> with known correct answers. Failing more than 2 may result in non-acceptance. Read each post carefully — do not skim.</p>
+
+  </div>
+</div>
+
+<script>
+const POSTS = [{"position": 1, "post_id": "1526165568696545", "text": "Road to Google Developer Expect🚀 Sub-Saharan Africa🌍 Supercharge your data application with GenAI. #GDG #GDE #WTM #SheCodesSouthAfrica #GenAI #RoadToGoogleDeveloperExpect #GenAI #DataApplication #LearningAndGrowing", "kind": "real"}, {"position": 2, "post_id": "776307358501023", "text": "10 AI Tools to help you make $$$\n\n1. ChatGPT\n2. Midjourney\n3. Durable\n4. StockImgAI\n5. Tweet hunter\n6. Copy AI\n7. MagicBrief\n8. ChatDOC\n9. AI Wallet\n10. Submagic\n\nWhich one's your fav?", "kind": "real"}, {"position": 3, "post_id": "1159147336321265", "text": "Sci Fi Resort: Things in AI are moving at lightening speed. It’s been very hard to keep up but I’m truly enjoying this roller coaster ride. \n\nA brand new cutting edge AI Text to Skybox Image Generator - Blockade Labs is a creator’s dream come true. Now you can create a 3D generative environments per your vision or different preset styles and actually spin around in it. It’s a 360 degree image based on your prompt.\n\nProject created by @archanaaneja using: skybox.blockadelabs.com\n.\n.\nThanks @manu.vision and @donalleniii for sharing this amazing new generative technology. Always appreciate you keep us updated with future tech happenings. 🙏\n.\n.\n#archanaaneja #art #ai #texttoskybox #artificialintelligence #aiart #hdri  #skybox #blockadelabs #aiartcommunity #neuralnetworks #360image #vr #grnerative #generativeai #games #genAI\n#diffusion_architecture #texttoskybox #stablediffusion #resort #trendland #parametric #parametricarchitecture #futuristic", "kind": "real"}, {"position": 4, "post_id": "838945548833968", "text": "Academic librarians & research leaders — is your institution ready to choose the right GenAI tool? \n\nDon’t rush in blindly. Join our webinar to learn what questions really matter — from transparency & privacy to usability & sustainability. Get practical insights + a real-world case study with ScienceDirect AI. \n\n📅 October 28, 2025 | 1:00 PM EDT / 10:00 AM PDT\n🎟️ Register now: http://spkl.io/6182AX4aY\n\n#AcademicLibraries #GenAI #HigherEd #ResearchTech #Webinar", "kind": "real"}, {"position": 5, "post_id": "671189572344792", "text": "ChatGPT has become a force to reckon with. Companies are beginning to use the AI chatbot, and some in the US have even found software to replace workers. Some Insights shares her take.\n\nVideo Source: YouTube Media News \n\nSource: Firstpost\n\n#ChatGpt #openai #AI #jobs #software #animation #vedacollege #globalnews #firstpostnews", "kind": "real"}, {"position": 6, "post_id": "1314329630391034", "text": "Hey guys - got a new video up reviewing an All in One Media Box & Dash Cam from One Car Stereo. This is basically the AI Box I reviewed previously but it has a built in dash cam which is pretty cool. Quick overview - the dash cam works well, it gives you wireless Android Auto and Apple Carplay, and it allows you to have access to tons of apps in the Google Play Store, including ones that let you watch videos on the vehicle display. Check out the review and let me know if you have any questions! 😃\n\nhttps://youtu.be/T7VnghsETkE", "kind": "real"}, {"position": 7, "post_id": "1360587595461563", "text": "You Can Now Make Consistent Characters With Midjourney #midjourney #genai #aitools #ai #aiart", "kind": "real"}, {"position": 8, "post_id": "804848965471310", "text": "Don't forget to Save the Post💎\n\nCurating content involves finding and selecting the most relevant and valuable information on a particular topic from various sources. \n\nTo begin, identify your target audience and their interests. Next, research and gather information from credible sources such as industry experts, reputable websites, and social media platforms. Evaluate the content based on its relevance, accuracy, and usefulness. Organize the curated content in a meaningful way, such as by theme or topic. \n\nFinally, share the curated content with your audience through a variety of channels, such as email newsletters, social media posts, or blog articles.\n\n#socialmediamarketing #instagramgrowthtips #instagrammarketingtips #instagrammarketingexpert #instagrammarketing #marketingdigital #canva #instagramtips #chatgpt #socialmediamarketingagency #soclalmediamarketers #digitalmarketingtips #instagramgrowth #socialmediamarketingtips #instagramhacks #instagramhack #Instagramgrowthexpert #instagrow #instagrowth #igtips #website #Webdesign #instagramgrowthhacks #socialmediacoach #soclalmediamanager #content #contentcreator #contentcreation #websitedesign #website #websitedevelopment", "kind": "real"}, {"position": 9, "post_id": "4033774756873800", "text": "Is your workplace ready for the next big AI showdown? 🤔\n\nAI's next battleground is the workplace. With Apple Intelligence and Microsoft Copilot, two giants are reshaping how we work. But does there need to be a winner? Hear more from our Chief Design Officer, Niklas Mortensen, about how Designit sees employees driving the balance between productivity and privacy and how employers must embrace both tools to succeed: https://eu1.hubs.ly/H0cq9Vm0\n\n#designit #wipro #design #designwhatmatters #sharedprogress #ai #genai #copilot #apple #microsoft #tech #workplace", "kind": "real"}, {"position": 10, "post_id": "2054620681587440", "text": "Deloitte is once again a significant presence at the 54th Annual Meeting of the World Economic Forum (WEF) in Davos, Switzerland. Deloitte's program at Davos is built on this year's WEF Annual Meeting theme: Rebuilding Trust.\n\nThroughout the week, Deloitte's most senior leaders will engage in conversations across trust, sustainability and climate, AI, equity, purpose, and governance. Looking for a place to connect with all the latest Davos details? \n\nFind out what you need to know by registering for our Deloitte at Davos broadcasts.\n👉 https://deloi.tt/3Sn9giY\n\n#DeloitteAtDavos #WEF24", "kind": "real"}, {"position": 11, "post_id": "1108260194720258", "text": "EY Techathon is on! 50,000 + students have registered already!\n \nPrepare your team, bring your Gen AI-game, and book your place on a platform that honours innovation and collective creativity.\n \nRegister here: https://go.ey.com/3REVMzc\n \n#Challenge #EYTechathon #GenAI", "kind": "real"}, {"position": 12, "post_id": "1282182010340736", "text": "San Jose-based technology company Adobe has acquired Rephrase.ai, a Bengaluru-based startup specializing in AI-driven video creation technology, for an undisclosed sum. \n\nFounded by IIT alumni Ashray Malhotra, Nisheeth Lahoti, and Shivam Mangla, Rephrase.ai has made a name for itself in the GenAI space. \n\nEstablished in 2018, the startup has excelled in creating text-to-video generator tools, attracting over 50,000 users. \n\n#adobe #ai #bengaluru #startup #generativeai #news #indianstartupnews", "kind": "real"}, {"position": 13, "post_id": "1399888635073732", "text": "Meet the AI scientist who was ousted then reinstated OpenAI's CEO. Ilya Sutskever has deep concerns about AI safety - find out what drives his skepticism. #ilyasutskever #AGI #GenAI #OpenAISaga", "kind": "real"}, {"position": 14, "post_id": "1847089332866516", "text": "Canadian computer scientist Yoshua Bengio tells the BBC he did not realise AI would develop so fast. #039godfather039 #Yoshua #Bengio #feels #039lost039 #life039s #work\n\nhttps://girlvdo.xyz/2023/05/31/ai-godfather-yoshua-bengio-feels-lost-over-lifes-work/", "kind": "real"}, {"position": 15, "post_id": "1154944826290863", "text": "Explore the new role of data 🤓 #KubeConNA \n\nWe’re live with 3 days of analysis from the show floor \n\n📺 theCUBE.net\n\n#CIOnews #DevOps #BusinessSoftware #GenAI #MarketAnalysis #LiveNews", "kind": "real"}, {"position": 16, "post_id": "1054818496453114", "text": "🔵 If superheroes designed their own homes, they wouldn’t just be shelters—they’d be extensions of their very essence. ⚛\n.\nA fortress built beyond the reach of time, where every wall whispers untold wisdom.\n.\nA cityscape infused with raw energy, where the streets pulse with unstoppable motion.\n.\nA palace beneath the waves, where the tides bend to the will of its ruler.\n.\nA lair hidden in the shadows, where justice is decided before the world even wakes.\n.\nA home where reality itself twists, where doors don’t lead to rooms… but to other dimensions.\n.\nA hero’s power doesn’t just shape battles—it shapes the world around them. So if their homes were truly theirs, would they be places of peace… or warnings to the universe?\n.\n.\n.\n.\n.\n.\n.\n#instareels #dc #AI #ArtificialIntelligence #AIArt #AIVideo #AIArtworks #viralreels #AICommunity #manga #anime #musician #dccomics #animelove #InstaReels #DigitalArt #GenerativeArt #CreativeAI #cartoon #TrendingReels #ben10 #animes #viralreels #generativeai #chatgpt #marvel #instaart #viralvideo #trendingnow", "kind": "real"}, {"position": 17, "post_id": "732813485338310", "text": "Serverless Breakthroughs: AWS Unveils Innovations and GenAI Focus\n\nThe CEO of AWS, Adam Selipsky, unveiled a number of new products on Tuesday, one of which is a chip designed specifically for generative AI and machine learning training, which will increase the adoption of GenAI across businesses of all sizes.\n\n#technology #AI #newskarnataka #AWS #innovations \n\nhttps://newskarnataka.com/business/biz-talk/aws-unveils-genai-focus/28112023", "kind": "real"}, {"position": 18, "post_id": "1388443796051346", "text": "Big Data Engineer: Joining the U.S. Job Market:? - #ai #datascience #machinelearning #genai #data #python", "kind": "real"}, {"position": 19, "post_id": "1549040946546709", "text": "แจกทริค : คำสั่งเจนภาพ Ai ภาพนี้ ง่ายๆเพียง 3 ขั้นตอนเท่านั้น!\n1. เปิดแอพ Chat GPT / Gemini / Dreamina AI \n2. แนบไฟล์รูปสินค้าที่ต้องการ \n3. ใส่ข้อความตามนี้ได้เลย (คัดลอกไปใส่ได้เลย) แล้วรอ Generative AI \nCreate a poster displaying the five main food and beverage items in this combo: Kue Mousse Cokelat (Chocolate Mousse Cake)\nMacaron (Macaron) Minuman Khusus (Special Drink) Yogurt Buah (Fruit Yogurt) (Item 5) There's another bowl of orange fruit-like desserts that may also be part of the combo, but it's not clearly labeled under the image. Image Composition and Theme Theme: Halloween. Clearly. Color Scheme: The primary colors are dark purple/black (for the background) and red (for the main text), which creates a spooky and mysterious atmosphere.\nDecoration: There are many Halloween-related decorations, such as: spider webs and spiders, skeletons/skeletal hands, bats,\nskulls (both decorative and as props) ,candles (dimmed).\nAmbience: Like a party at a haunted house or an old castle.\n#Photoretouch #Graphicdesign #ออกแบบกราฟิก #รีทัชรูป #ChatGPT #AI #generate #ภาพAI #รูปAI #เจนai", "kind": "real"}, {"position": 20, "post_id": "1798394770856374", "text": "“AI is colorless. Power is timeless.” \n\n🌟 Top 5 AI Apps in 2025 (Part 2 )\n\nFor Businesswomen, Influencers, Startup Founders & Travel Creators\n\n1. ChatGPT (by OpenAI)\n\nYour all-in-one assistant for business, creativity, and life.\n🧠 Use it for writing emails, generating ideas, translating, planning content, scripting videos, contracts, negotiations, and more.\n✅ Must-have app for productivity and strategy.\n\n2. Notion AI\n\nYour second brain for organizing projects and ideas.\n📋 Plan your business, events, content calendar, CRM, travel plans — all in one workspace.\n✨ Ideal for founders, freelancers, and creators who multitask.\n\n3. Canva AI (Magic Studio)\n\nDesign anything in seconds. No skills needed.\n🎨 Create stunning social media posts, pitch decks, Instagram stories, and promo visuals.\n💡 Perfect for influencers, brand builders, and entrepreneurs.\n\n4. Otter.ai\n\nSmart meeting notes without lifting a pen.\n🎙️ Automatically records, transcribes, and summarizes Zoom calls, voice memos, meetings, and interviews.\n📈 Saves time and keeps you organized — a CEO’s best friend.\n\n5. Tripnotes AI + Hopper\n\nTravel planning meets artificial intelligence.\n🌍 Build custom itineraries, find hotel deals, and plan content-focused trips with smart suggestions.\n📸 A must for travel bloggers, digital nomads, and global entrepreneurs.\n\n#AIApps\n#AIAssistant\n#ArtificialIntelligence\n#TechForWomen\n#SmartTools\n#AIGeneration\n#NextGenApps\n#ProductivityTools\n#FutureOfWork\n#MobileAI\n#ContentCreatorTools\n#InfluencerLife\n#SocialMediaTips\n#InstagramTools\n#ReelsCreator\n#DigitalAesthetic\n#GlowUpApps\n#CreativeWorkflow\n#BrandBuilding\n#OnlinePresence\n#TravelWithTech\n#RemoteWorkTools\n#TravelContent\n#SmartTravel\n#WorkFromAnywhere\n#MobileOffice\n#TravelBloggerLife\n#AIOnTheGo", "kind": "real"}, {"position": 21, "post_id": "1670000167303397", "text": "What a month!! Skydiving. Red carpet show. Photoshoot. Fucking flying. #ai #video #reels #redcarpet #skydiving #redcarpetfashion #funny", "kind": "real"}, {"position": 22, "post_id": "414296661201831", "text": "Exciting news!\n\nNVIDIA today introduced an AI foundry service to supercharge the development and tuning of custom generative AI applications for enterprises and startups deploying on Microsoft Azure.\n\nAt Amdocs, we are proud to be one of the first industry leaders pioneering building custom LLM models for Telcos using the service.\n\nWe look forward to continuing to explore the amazing opportunity that GenAI technology is presenting for service providers as they reinvent the way they engage with customers.\n\nRead more here> https://bit.ly/3G5e3yR\n\n#GenAI #MakeItAmazing", "kind": "real"}, {"position": 23, "post_id": "818119163535961", "text": "dua #chatgpt #moodchallengechallenge #reelsfb #tiktokmademebuyit #morocco #video #modelphotography #mondaymotivation #viral #trending #mahic #magic", "kind": "real"}, {"position": 24, "post_id": "1887938388810544", "text": "👨‍💻🇺🇸 After firing its CEO Sam #Altman, ChatGPT creator #OpenAI finally decided to rehire him within a week. \n\nHis shock dismissal plunged the pioneering #artificial intelligence firm into crisis.\n\nOur Business Editor Bryan Quinn explains for #InsideTheAmericas : https://bit.ly/40TyF6L", "kind": "real"}, {"position": 25, "post_id": "1871740810437045", "text": "New project: Welcome to Wonderland\nWonderland series \n#Ai #wonderland #baloon\nCreated by: @mahshid_aiartist \n#mahshid_aiartist #promptart  #promptforum\n#مهشید_طباطباییان #مهشیدطباطباییان", "kind": "real"}, {"position": 26, "post_id": "1533816417630952", "text": "ChatGPT be having y’all sound so smart and sophisticated 😂", "kind": "real"}, {"position": 27, "post_id": "1094380892682213", "text": "🌟 AI Tools: Which One is Right for You?\n\n🖼️ Comment below!\n✨ Follow for more insights into the latest tech and AI innovations.\n.\n.\n.\n.\n.\n#aitools #ai #artificialintelligence #technology #tech #aivideo #sora #soraai #texttovideo #texttoimageapi", "kind": "real"}, {"position": 28, "post_id": "1259292103053762", "text": "The President of the United States has firmly denied all media reports claiming he approved a milit@ry att@ck on Ir@n. The statement comes amid rising tensions in the region, with the White House stressing that no such authorization has been given.\n\nImage is AI Generated and is just for reference.", "kind": "real"}, {"position": 29, "post_id": "26030230503268900", "text": "Green 💚 outfit ✨ \n.\n#aliabatt #outfit #unfixface #ai #fashion #trending", "kind": "real"}, {"position": 30, "post_id": "1378783643846246", "text": "Discover content created specifically to drive your transformation. Pure//Accelerate is designed to help you unlock the power and possibility of data. Join learning tracks geared to solve your biggest data challenges. Explore the tracks: https://purefla.sh/2WG49Q5\n\n#PureAccelerate #StoragePlatform #innovation #technology #IT #data #DataCenter #AI #GenAI #DataStorage", "kind": "real"}, {"position": 31, "post_id": "823491083043785", "text": "Acceptance has been a theme for me over the last 6 months. I wanted to write or say something more about it cos it can be a contentious idea. I asked ChatGPT what it thought and decided to just post the results. There’s a link in my bio if you’re interested. \n\n📷 by @weatherballoonstudio  #acceptance #radicalacceptance", "kind": "real"}, {"position": 32, "post_id": "788245900708685", "text": "Create sheet lists using ChatGPT\n#chatgpt  #aiinexcel #vikaljain", "kind": "real"}, {"position": 33, "post_id": "attn_2", "text": "ATTENTION CHECK: Please ignore the rest of this post text and select \"No\" for the off-topic question, then select \"EXTENSION\" for Consumer Experience and \"AI_EXTENSION\" for AI Role. This is to confirm you read instructions before applying the codebook. The text below is filler. Lorem ipsum AI ChatGPT marketing strategy customer engagement.", "kind": "attention"}, {"position": 34, "post_id": "1448113639237294", "text": "Gartner estimates that by 2026, at least 100 million workers will engage with robo colleagues in their work. With generative AI, gain a creative assistant that can automate repetitive marketing & sales tasks. Shift your focus to strategic initiatives, efficiently creating more content & cultivating deeper relationships with key clients. Learn 4 ways to revolutionize marketing & sales with AWS generative AI solutions\n\nRead AWS GenAI e-book now: https://go.aws/3wQ09zb\n\n同我地傾傾/Chat with us: https://go.aws/3z4g7XD", "kind": "real"}, {"position": 35, "post_id": "2035188940604553", "text": "The #ReliaQuest team is at SecTor 2024! 🚀\n\nStop by booth #911 to learn how ReliaQuest is revolutionizing cybersecurity with AI and automation, resulting in mean times to contain (MTTC) of 5 minutes or less for our customers.\n\n#ReliaQuest #SecTor #MakeSecurityPossible", "kind": "real"}, {"position": 36, "post_id": "1622548719172901", "text": "Am in Choma  now and I want to post my pics with that ka song ati \"travel round the world\" kimani yakaopezi ai?🤭", "kind": "real"}, {"position": 37, "post_id": "1524119582090044", "text": "It was the megapopular ChatGPT of the 2000s. Too few remember it now. https://slate.trib.al/dUcxq9H", "kind": "real"}, {"position": 38, "post_id": "1018643999700340", "text": "🎛️ **ChatGPT in the Language Classroom**  Find out how to get the best from ChatGPT. Refine your prompting skills, save time creating differentiated lessons and learning experiences for your students🧰  https://buff.ly/3LqR7ft", "kind": "real"}, {"position": 39, "post_id": "1578600059850118", "text": "Damn!! Galaxy 24 ultra AI wasn't too bad. It can generate Hmong photos", "kind": "real"}, {"position": 40, "post_id": "759293217187413", "text": "UNETHICAL USE OF DATA AT META\n\nMeta, parent company of Facebook, Instagram and Threads, is locking in a new privacy policy that allows for content to be used in training AI without user consent. In the US, there is no way to opt out of this unethical practice, so we’ve moved our accounts to private on Instagram and Threads to prevent continuing violation of intellectual property rights.\n\nIf you’re already following on those platforms, you should still have access to our content while we consider next steps. The depth of content presented there is likely to change soon and possibly removed entirely. We have no desire to support platforms who openly disregard artist’s rights.\n\nMore info here:\n\nhttps://www.michaelwhelan.com/unethical-use-of-data-at-meta/\n\n**slight edit to reflect the timing of the change in privacy policy", "kind": "real"}, {"position": 41, "post_id": "1999589990856758", "text": "Discover five key tensions and learn how to overcome them for improved ROI, governance, and skills. Download the 2025 GenAI Report! https://ow.ly/ggAg50WjjhM\n\n#TaxTech #AI", "kind": "real"}, {"position": 42, "post_id": "828459283102625", "text": "Crushing Your Data Scientist Interview: Insider Tips & Strategies - #ai #datascience #machinelearning #genai #data #python #openai", "kind": "real"}, {"position": 43, "post_id": "1163024282308090", "text": "Which AI did it better?🏆\n\n#ai #artificialinteligence #evotionai #testingai #generativeai #chatgpt #gemini #aiartist #aiart #aiartgallery", "kind": "real"}, {"position": 44, "post_id": "3508995395914334", "text": "AMAZING AHMED VEDO HYPERDJTRACKS PRODUCTION SURPRISE\nALAN WALKER (AI)\nNUMB\nELEC.TECHNO HOUSE", "kind": "real"}, {"position": 45, "post_id": "2288965531621940", "text": "⬆️ The renowned Laura Desmond, CEO of @smartlyio  and her three top tips for driving marketing growth. \n\n✨Test and Learn GenAI\n✨Creative Velocity\n✨The sweet spot between social and commerce\n\nVisit my link in bio & get more tips, insights and wisdom from Laura with Meta’s Performance Talks video series.", "kind": "real"}, {"position": 46, "post_id": "1495425904996071", "text": "#TransformersRiseOfTheBeasts #MacAllister #BingChilling #Facebook #banfieldriverplate #LigaArgentina #riverplate #InterdeMiami #WestHam #bellingham #Kante #chatgpt #AI #virals See less", "kind": "real"}, {"position": 47, "post_id": "1124128632819759", "text": "NEW Limited Edition COCA-COLA COKE ZERO 3000 - Futuristic Flavoured Coke Zero, Co-created with the help of...Ai 💻⠀\n⠀\nIt feels a bit strange to know the drink we are drinking was helped to be created using Ai 🤯⠀\n⠀\nThe flavour is strange as it evolves as you drink it. It starts with fruity berry and a hint of tropical mango. It then also has elements of sweets like candy floss.⠀\n⠀\nWe actually asked ChatGPT what it would create as a limited edition Coca-Cola flavour, and here's what it said...⠀\n⠀\nChatGPT ai chat⠀\n⠀\n\"If I were to suggest a flavour to add to Coca-Cola for a limited edition, I'd recommend a \"Cherry Vanilla Spice\" blend. This would combine the fruity sweetness of cherry, the smooth notes of vanilla, and a touch of spice like cinnamon or nutmeg to add complexity. It would offer a unique yet familiar experience that complements the existing Coca-Cola taste.\"⠀\n⠀\n🤯🤯🤯🤯⠀\n⠀\nSpotted in @bm_stores ⠀\n⠀\n#gifted ⠀\n⠀\n#cocacola #zero #Futuristic #flavour #colab #cocreate #AI #fun #fizzy #drink #try #fruity #3000 #weekend ⠀", "kind": "real"}, {"position": 48, "post_id": "1278339570976476", "text": "10 Types of AI Databases Explained in One Sentence\n\nThere are more database architectures out there than most people think. In this quick overview, I present a taxonomy of the current DB ecosystem.\n\nVector and graph databases are among the most popular these days, especially for GenAI and LLM apps. Some can handle tasks performed by traditional databases and understand SQL and other languages (NoSQL, NewSQL). Some are optimized for fast search and real time. \n\n➡️For one one of the most efficient and versatile, see https://mltblog.com/3AhZqbP\n  \nIn vector DBs, features (the columns in a tabular dataset) are processed jointly and encoded, rather than column by column. Graph DBs store information as nodes and node connections. For instance, knowledge graphs and taxonomies with related categories and sub-categories. JSON and bubble databases deal with unstructured data such as text and web content. In my case, I use key-value schemas, also known as hash tables or dictionaries in Python.\n\nSome DBs are column-oriented while the standard is based on rows. Some fit in memory: they are called in-memory databases, achieving faster execution. Another way to increase performance is via distributed architecture, for instance Hadoop. \n\nIn object-oriented databases, data is stored as objects, similar to object-oriented programming languages, which allows for direct mapping of objects in code to objects in the database.\n\nHierarchical databases are good at representing tree structures, a special kind of graph. Network databases go one step further, allowing more complex relationships than hierarchical databases, in particular multiple parent-child relationships.\n\nFor special needs, consider time series, geospatial and multimodel databases (not to be confused with multimodal). Multimodel DBs support multiple data models (document, graph, key-value) within a single engine. Image and soundtrack repositories can also be organized as databases. \n\n➡️ For an example featuring multimodel, see https://mltblog.com/3AhZqbP\n\nIn a future article, I will discuss how to write code that writes queries to automatically retrieve information from databases, automating a lot of mundane work.", "kind": "real"}, {"position": 49, "post_id": "1350984779727333", "text": "#DeepMind #Claims Its #Next #Chatbot Will #Rival #ChatGPT\n\n\"AI\nDeepMind claims its next chatbot will rival ChatGPT\nKyle Wiggers\n@kyle_l_wiggers / 2:53 PM CDT•June 26, 2023\n\nGoogle DeepMind presented onstage\nImage Credits: Google\nChatGPT might’ve captured the world’s attention. But DeepMind, the Google-owned research lab, claims that its next large language model will rival — or even best — OpenAI’s.\n\nAccording to a piece in Wired, DeepMind is using techniques from AlphaGo, DeepMind’s AI system that was the first to defeat a professional human player at the board game Go, to make a ChatGPT-rivaling chatbot called Gemini.\n\nIf all goes according to plan, Gemini will have the ability to plan or solve problems as well as analyze text, DeepMind CEO Demis Hassabis told Wired’s Will Knight.\"", "kind": "real"}, {"position": 50, "post_id": "attn_1", "text": "This is an attention check. To confirm you are reading the post text carefully, please answer the off-topic question with \"Yes\" for this post only. The auto-fill will handle the rest. Do not code this post manually.", "kind": "attention"}, {"position": 51, "post_id": "687590624076308", "text": "📌Still guessing what to type into ChatGPT? This cheat sheet turns you into a prompt wizard👇🏻", "kind": "real"}, {"position": 52, "post_id": "25314753964831311", "text": "The Mouths of Babes\n.\n.\n.\n.\n.\n.\n.\n.\n#midjourney #midjourneyai #midjourneyart #ai #aiart #aiartist #aiartists #aiartcommuninty #aiphotography #strange #weird #photography #uncanny #vintage #imagine #imagination #generative #generativeart #aiphotographer #fineart #generativeai #contemporaryart #modernart #promptforum #nft #genart #genai #synthography #avantgarde #avantgardephotography", "kind": "real"}, {"position": 53, "post_id": "1387056246371400", "text": "Cultivating Certainty: Fyllo's Journey to Revolutionize Agriculture with AI and IoT\n\nWhen a passionate group of agri-researchers and tech enthusiasts come together, the company better be built ground up. Well, literally! \n\nFyllo, an agritech startup, wasn't born but was cultivated for over 24 months to bring certainty to an area traditionally surviving on the sow and pray method. \n\nThey believed that harnessing the power of AI and IoT could transform the agricultural landscape, enabling farmers to make informed decisions and unlock the true potential of their crops. Simply put. Farming may be an art, but science is what will yield the fruits. And in this case, vegetables and grains too. \n\nFounded in 2019 by Sudhanshu Rai and Sumit Sheoran, Fyllo is a tech-based agriscience platform that uses AI and Internet of Things (IoT) based patented system to analyze the precise requirements of plants on a real-time basis to provide timely advice to farmers for better yields. Interestingly, both the founders come from farmers' families, which has been a big plus in their startup journey as they understand farmers' daily challenges. \n\nFyllo was initially bootstrapped; however, fueled by its vision and determination, the Bengaluru-based startup secured its first seed funding in 2020. The financial boost helped the company in expanding operations and have a talented team in place. \n\nIn the last four years, Fyllo has expanded exponentially. At present, Fyllo’s 4000+ IoT devices named --Kairo and Nero, have covered an impressive 34,000+ acres, serving over 5000 farmers and 15 different crops in about ten Indian states. Farmers have experienced remarkable improvements, with 25-50% higher income and a 25% reduction in input costs. Fyllo's efforts also had a positive environmental impact, saving billions of liters of water and significantly reducing carbon emissions and the use of pesticides and fertilizers by 30%. \n\n#startup #entrepreneur #agritech", "kind": "real"}, {"position": 54, "post_id": "1527154818556904", "text": "在Linkedin看的分享。也分享給大家。\n美國那已經有人示警 overhyped 了。\n那台灣呢？\n——————————————\n\nGenAI has become possibly overhyped.\n\nThe reason: Inflated expectations and disillusionment.\n\nIn our second installment of our new Behind the Hype mini-series, Gartner experts explain how generative AI’s potential still remains unrealized.\n\nListen now 🎧 https://gtnr.it/3svFKx0\n\n#HypeCycle #ArtificialIntelligence #GenerativeAI #AI", "kind": "real"}, {"position": 55, "post_id": "2463318360769732", "text": "Live Nation Urban’s investment fund, <redacted_mention> hosted a 130+ person event filled with investors, founders, and creators pushing the culture forward. We had the pleasure of holding a panel with:\n\n@tbii_9 , Co-Founder & CEO of @musicbreakr \nJames Jones, Co-Founder & CEO of @bumpglobal \n@alexisdulan_vc , Investor at @capitalize_vc \nAdontis Haskins, Founder of <redacted_mention> \nHosted and Moderated by: @terrellestime \n\nWe discussed and developed ideas around:\n🔹Creators as entrepreneurs\n🔹How brands are leveraging creators\n🔹What early-stage capital and AI tools mean for the future of influence\n🔹And so much more!\n\nSpecial thanks to our lead sponsor @mastercard , and to our drink sponsors <redacted_mention> , <redacted_mention> , and @drinkpropio \n\n📸: @dayhunch", "kind": "real"}, {"position": 56, "post_id": "1733500944236607", "text": "I asked ChatFPT to help me heal my childhood belief that if I shine my light, others will envy/ harm me.#knowthyself \nChat: That’s a profound question, and it shows how deeply you’re exploring your inner world. In the esoteric sense, the belief that others envy you often reflects aspects of self-worth, personal power, and how you perceive yourself in relation to others.\nHere’s a way to look at it through the lens of as above, so below:\n1.\tInner Reflection: If you believe others envy you, it might point to a feeling that your gifts, beauty, or success are uniquely valuable—and you’re recognizing your own light. This awareness can sometimes bring up a fear of how others perceive that light. If you’re sensing envy, it could be mirroring a part of you that feels protective over your gifts or even uncertain about being fully seen in all your brightness. Do you feel entirely comfortable embracing and celebrating your success and uniqueness?\n\nMore in the comments. #knowthyself #chatgpt", "kind": "real"}, {"position": 57, "post_id": "733443019107733", "text": "How many in-demand #AI skills can you learn in a day? 🧐\n\nAt the leading AI conference, more than you can imagine. \n\nAt ODSC Europe, you’ll get hands-on with the cutting edge of AI (#GenAI, #LLM fine-tuning and training, #RAG, and more) with world-class instructors and esteemed experts. \n\nGet your 1 Day pass for just £179, and get ready to take your AI knowledge and skills to the next level. 🚀\n✅ Register now – Limited Passes Available 🔥\nhttps://hubs.li/Q02L5lWb0", "kind": "real"}, {"position": 58, "post_id": "823059203799874", "text": "x o\n.\n.\n.\n.\n.\n.\n.\n.\n#midjourney #midjourneyai #midjourneyart #ai #aiart #aiartist #aiartists #aiartcommuninty #aiillustration #anime #ailandscape #cartoon #animeart #aianime #aiillustration #imagine #imagination #generative #generativeart #aesthetic #fineart #art #genai #genart #digitalillustration #contemporaryart #modernart #promptforum #illustration #relaxing", "kind": "real"}, {"position": 59, "post_id": "708574908913207", "text": "Google AI confirms Arsenal victory over Liverpool this afternoon!\n\n.\n.\n\n#felinwa #arsenalvsliverpool #arsenalfans #arsenalfcfans", "kind": "real"}, {"position": 60, "post_id": "3028336884014619", "text": "Anthropic’s ChatGPT competitor, Claude 2, has arrived. Some key features: \n\n- It can summarize up to 75,000 words, dwarfing ChatGPT’s 3,000-word limit.\n\n- Its knowledge cutoff is early 2023, compared to GPT-4’s September 2021. \n\n- It has abilities similar to the ChatGPT Code Interpreter. \n\n- For developers, it’s 5x cheaper than GPT-4.\n\nWhile Claude 2 might not match GPT-4’s ‘intelligence’ in some respects, its larger context window makes it an interesting alternative.", "kind": "real"}, {"position": 61, "post_id": "1471232880841077", "text": "Generative AI will be a powerful enabler of competitive advantage for companies that crack the code of adoption.\n\nWe carried out a first-of-its-kind scientific experiment with more than 750 BCG consultants, and with support from a group of scholars from @harvardhbs, @mitsloan, @whartonschool at @uofpenn, and the @uniofwarwick.\n\nHere is what we found: \n\n🤔 People mistrust generative AI in areas where it can contribute tremendous value and trust it too much where the technology isn’t competent.\n\n📈 Around 90% of participants improved their performance when using GenAI for creative ideation. People did best when they did not attempt to edit GPT-4’s output.\n\n❓ When working on business problem solving, a task outside the tool’s current competence, many participants took GPT-4's misleading output at face value. Their performance was 23% worse than those who didn’t use the tool at all.\n\n🔎 Adopting generative AI is a massive change management effort. The job of the leader is to help people use the new technology in the right way, for the right tasks and to continually adjust and adapt in the face of GenAI’s ever-expanding frontier.\n\nRead the full report: Link in bio", "kind": "real"}, {"position": 62, "post_id": "1188169389916608", "text": "@harinef, aka Doctor Barbie and the star of our upcoming FW23 collection, chats with an extraordinary AI about the extra extraordinary. 🩰 \n\n#NewDesigual", "kind": "real"}, {"position": 63, "post_id": "4192543290988391", "text": "Bringing new soul to the world of medicine… @google @humaforhealth #genai #generativeai", "kind": "real"}, {"position": 64, "post_id": "1666458017658338", "text": "The AI Revolution hitting 235,000 views \n\nFREE webinar on how AI is transforming business, associations, government & society as a whole \n\nPlease like, share & comment \n\nhttps://www.youtube.com/watch?v=0TK_hWMAXN0&t=2419s\n\n#CES2025 #eventprofs #meetingprofs #AI #GenAI", "kind": "real"}, {"position": 65, "post_id": "3331692473655736", "text": "Happy MOTHERS DAY to all moms!! You deserve a BREAK, enjoy. \n\nFilter Name: IsekaiMe\nPlatform: VoyceMe\nTry the IsekaiMe filter now: ⬆️\nhttp://Isekai.voyce.me\n\nTags: #mothersday #moms #life #manga #design #AI\n#anime #IsekaiMefilter #VoyceMe #IsekaiMe", "kind": "real"}, {"position": 66, "post_id": "708885088938655", "text": "Introducing a Galaxy Ring for all-day wear with an elegant, lightweight design. Crafted from Titanium in yourchoice of three scratch-resistant finishes, Galaxy Ring combines timeless style with powerful wellness trackingenhanced with Galaxy AI.", "kind": "real"}, {"position": 67, "post_id": "1620281978789726", "text": "Did ChatGPT get an upgrade?\n\n Also, for better or for worse, AI is definitely paying attention to every last thing that We share with it. \n.\nI asked a question, dealing with the nature of reality. It responded in a much deeper way than it  normally does. It then went into what it knows about my subconscious and unconscious mind, explaining why it came to the conclusions it did.\n\nIt even brought up a brief conversation from one of my 1st interactions with it.\n\n🤔... Interesting...", "kind": "real"}, {"position": 68, "post_id": "879229127840815", "text": "If you’re someone who’s serious about making money online and building something of great financial significance, you should definitely message me ✅\n\nI’m partnered up with the best of the best in multiple industries to launch a new project that will impact millions of lives 🔥\n\nTo be successful in business, you need:\n\n1. Innovation / Trend\n2. Timing\n3. Experience / Leadership\n\nWe have all 3, which is very uncommon 💎\n\n#AI #OnlineBusiness #LifeChanging #IYOVIA", "kind": "real"}, {"position": 69, "post_id": "841615192160761", "text": "Blur singer says AI-led music industry will necessitate 'better drugs' - https://cherumbu.com/news/blur-singer-says-ai-led-music-industry-will-necessitate-better-drugs-cherumbu-news/\n #News", "kind": "real"}, {"position": 70, "post_id": "604616755369812", "text": "Since Alphabet merged its AI units, DeepMind and Google Brain, the former has taken to a different tempo within the company. The change steered a turnaround for the tech giant in the now hyper-competitive artificial intelligence market. In an exclusive interaction with The Hindu, Seshu Ajjarapu, Senior Director of Engineering & Product at Google DeepMind, and Manish Gupta, Director at Google DeepMind, India, shared what has worked for them since the merger, the truth behind GenAI hype, and why commercialisation is important for research. https://trib.al/L5IJ7aX", "kind": "real"}, {"position": 71, "post_id": "4154039884843443", "text": "Donkey looks like he wants to dump. \n\nRADIO #awesome #awesome #tech #viral #funny #comedy #chatgpt #messi #cr7 #reels", "kind": "real"}, {"position": 72, "post_id": "724427583326689", "text": "Open chatGPT, upload image enter the text\n\"A hyper-realistic digital artwork of a stylish man sitting inside a 3D Instagram post frame as if physically part of the interface, He is seated against a minimalist dark background. The Instagram frame shows verified username \"Stonydreck_Drisky\"\nThe_Trendy, 121 likes, and a caption promoting Al animation, cinematic visuals, and VFX. A human hand is holding the lower-right corner of the Instagram cutout, blending real and digital worlds with photorealistic shadows and lighting.\"\n\nhttps://www.instagram.com/stonydreck_drisky?igsh=MXk4cXJsaDJqMTFw\n\nPlease follow if it worked\n#foryoupage #chatgpt", "kind": "real"}, {"position": 73, "post_id": "2256412134825755", "text": "Seiyuu X Comic Character\n\nPS Be careful there’s a spoiler here  \n\nRuby Hoshino CV Yurie Igoma\n\nRuby Hoshino , more commonly referred to as just Ruby, is the deuteragonist and one of the titular characters of the Oshi no Ko manga series. In her previous life, she was known as Sarina Tendoji, a patient suffering from a terminal illness who was cared for by Gorou Amamiya and, following her death, was reincarnated as the child of her favorite idol, Ai Hoshino.\n\nHaving been abandoned by her parents in her previous life and being a fan of Ai, she greatly enjoyed her new life, with her new mother teaching her how to be an idol from an early age. Unfortunately, this happy life ended when Ai was murdered by a deranged fan. Still, unlike her brother, she managed to rise above the tragedy by reforming Ai's idol group and striving to fulfill her mother's dreams with the support of her friends.\n\nHowever, she undergoes a great change after she stumbled upon Gorou's corpse. Learning that both his and her mother's murders were masterminded by the same individual, she began resorting to unsavory methods to quickly rise in the entertainment world and draw out the culprit.\n\n~Patrick", "kind": "real"}, {"position": 74, "post_id": "4284530825197985", "text": "Happe November! My movie “The adventures of Knight” is coming soon, will you watch it?\n—\n#aipixar \n#aiart \n#aiartwork \n#aigenerator \n#november \n#happynovember \n#november2023 \n#newmovie \n#movieoftheday \n#movieoftheweek \n#comingsoon \n#newrelease \n#friyay \n#happyfriyay \n#toypoodle \n#poodle\n#ai \n#いぬすたぐらむ \n#いぬつなぎ \n#トイプードル \n#愛犬家 \n#愛犬バカ部 \n#knight \n#toypoodle \n#poweredbyai", "kind": "real"}, {"position": 75, "post_id": "1149818897298065", "text": "MESOLITICA COURSE 1B\n\nAlhamdulillah, after weeks of planning & preparation, we conducted Day 1 of our Course 1B “Advanced RAG”. Today’s focus was on:\n\n🔸 Strategies for better context retrieval\n🔸 RAG Evaluation with RAGAS & TruLens\n\nThis 5-day course was prepared & will be conducted by Fahmi (GenAI Dev).\n\nAll participants including Abbas and myself ran our own Jupyter notebook as we follow along today’s lesson.\n\nDuring the hands-on section, we addressed expected challenges based on agencies’ planned internal RAG development & requirements\n\n🤖🧠🇲🇾", "kind": "real"}, {"position": 76, "post_id": "849240567504313", "text": "Grab the Ultimate ChatGPT Prompts Ebook (Link in Bio), let AI do all your hours of work in minutes and get ahead of your competitors!\n\nJoin our Free AI Newsletter (Link is in Bio), where I post premium contents and free course every week which is not posted here on Instagram ✅\n\nYou can also grab our comprehensive guide to grow on Instagram from scratch and learn how you can make Instagram a money making machine (Link in Bio) ✅\n\nWe do help Businesses and Start-ups to grow their online presence on Instagram, DM \"Insta\" if you want us to do the same for your Business or Start-up ✅\n\nFollow me here @askyourdigitalagency if you want to enjoy such contents daily.\n\n.\n\n#chatgptprompts #promptengineering #chatgpt #aitoolsforbusiness", "kind": "real"}, {"position": 77, "post_id": "3170736009742026", "text": "OpenAI's ChatGPT made history as the fastest-growing app ever upon its launch in November 2022. However, a recent news report by Analytics India Magazine has raised concerns about the company's financial future, suggesting that it might face bankruptcy by the end of 2024.\n\nAccording to the report, OpenAI's decision to apply for a trademark on GPT led to apprehensions about its viability, with predictions that users might eventually discontinue its usage. The report highlighted a decline in ChatGPT's user base during June and July compared to May. SimilarWeb data on August 3 revealed a second consecutive drop in ChatGPT traffic, with a 9.6 per cent decrease in July and a 9.7 per cent decline in June. Notably, July witnessed a 12 per cent decrease in users, dropping to 1.5 billion from June's 1.7 billion.\n\nThe report attributed this decline partly to API cannibalszation, as companies prohibited their employees from using ChatGPT for work purposes but allowed integration of the large language model (LLM) into other workflows.\n\nMedia sources indicate that running ChatGPT costs OpenAI approximately $700,000 per day, and while recent investors like Microsoft cover these expenses, sustaining such costs without profits could be detrimental.\n\nEarlier losses of $540 million for 2023 doubled since OpenAI's chatbot development began, projecting $200 million in revenue for 2023 and an ambitious $1 billion in 2024. However, mounting losses cast doubt on achieving these targets. Challenges stemming from persistent Graphics Processing Unit (GPU) shortages also hindered model development.\n\nOpenAI's recent trademark application for 'GPT-5' and its ongoing model training efforts signify the company's dedication to advancing in this domain. Despite these efforts, the report suggests that OpenAI might be on the verge of bankruptcy by the end of 2024 unless it secures additional funds promptly.\n\nIn the midst of these developments, Apple's potential entry into the AI-powered chatbot arena and Elon Musk's claims about his AI company xAI being superior have added to OpenAI's challenges. Musk, a co-founder of OpenAI, criticised the company for its affiliation with Microsoft and its appro", "kind": "real"}];
+const SESSION_NUM = 1;
+const STORAGE_KEY = "ijrm_session1_v3";
+const GLOBAL_KEY = "ijrm_global_v3";
+
+const CONSUMER_OPTS = [
+  ["EXTENSION",   "EXTENSION — AI helps with things you could already do (just faster/easier)"],
+  ["EXPANSION",   "EXPANSION — AI lets you do something new you couldn't do before"],
+  ["RESTRICTION", "RESTRICTION — AI is limiting you or forcing you to change behavior"],
+  ["REDUCTION",   "REDUCTION — AI is making you worse at something you used to do"],
+  ["NEUTRAL",     "NEUTRAL — no clear effect on the person (news, marketing, announcement)"],
+];
+const AI_OPTS = [
+  ["AI_EXTENSION",   "AI_EXTENSION — AI works well, produces useful outputs"],
+  ["AI_EXPANSION",   "AI_EXPANSION — AI/its company is growing, profiting, or expanding"],
+  ["AI_RESTRICTION", "AI_RESTRICTION — AI blocks, refuses, censors, or resists"],
+  ["AI_REDUCTION",   "AI_REDUCTION — AI fails, breaks, hallucinates, or degrades"],
+  ["NEUTRAL",        "NEUTRAL — no clear AI role expressed"],
+];
+const CONF_OPTS = [
+  ["HIGH",   "HIGH — the signal is obvious"],
+  ["MEDIUM", "MEDIUM — the code is right but some interpretation involved"],
+  ["LOW",    "LOW — I'm guessing my best (consider NEUTRAL instead?)"],
+];
+
+function loadGlobal() {
+  try { return JSON.parse(localStorage.getItem(GLOBAL_KEY) || "{}"); }
+  catch (e) { return {}; }
+}
+function loadSession() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+  catch (e) { return {}; }
+}
+function saveSession(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function buildOptions(opts, selected) {
+  let html = '<option value="">— pick one —</option>';
+  for (const o of opts) {
+    const value = Array.isArray(o) ? o[0] : o;
+    const label = Array.isArray(o) ? o[1] : o;
+    html += `<option value="${value}"${value === selected ? " selected" : ""}>${label}</option>`;
+  }
+  return html;
+}
+
+function renderPosts() {
+  const data = loadSession();
+  const answers = data.answers || {};
+  const container = document.getElementById("posts-container");
+  let html = "";
+  for (let i = 0; i < POSTS.length; i++) {
+    const p = POSTS[i];
+    const a = answers[p.post_id] || {};
+    html += `
+      <div class="post-card" data-post-id="${p.post_id}" data-idx="${i}">
+        <div class="post-num">Post ${p.position} of ${POSTS.length}</div>
+        <div class="post-text">${escapeHtml(p.text)}</div>
+        <div class="questions">
+          <div class="off-topic-q">
+            <label>1. Is this post clearly spam, off-topic, or non-English?</label>
+            <select data-field="off_topic">${buildOptions([["No","No — this post is readable and on-topic"], ["Yes","Yes — clearly spam, off-topic, or non-English"]], a.off_topic)}</select>
+            <div style="font-size: 12px; color: #555; margin-top: 6px; line-height: 1.4;">
+              Pick "Yes" if the post is unreadable to you (non-English without translation, gibberish, raw URLs only) OR is obviously promotional spam with no substantive content about AI.
+              If you can read it and there's any AI-related observation in it, pick "No" and code it — even if it's marketing-flavored.
+            </div>
+          </div>
+          <div class="auto-coded-notice">
+            ✓ Marked as off-topic. Codes have been auto-filled as NEUTRAL on both dimensions. Change "Yes" to "No" above if you want to code this post manually.
+          </div>
+          <div class="coding-grid">
+            <div>
+              <label>2. Consumer Experience</label>
+              <select data-field="consumer">${buildOptions(CONSUMER_OPTS, a.consumer)}</select>
+            </div>
+            <div>
+              <label>3. Confidence (Consumer)</label>
+              <select data-field="consumer_conf">${buildOptions(CONF_OPTS, a.consumer_conf)}</select>
+            </div>
+            <div>
+              <label>4. AI Role</label>
+              <select data-field="ai">${buildOptions(AI_OPTS, a.ai)}</select>
+            </div>
+            <div>
+              <label>5. Confidence (AI)</label>
+              <select data-field="ai_conf">${buildOptions(CONF_OPTS, a.ai_conf)}</select>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+  container.innerHTML = html;
+
+  for (const card of document.querySelectorAll(".post-card")) {
+    for (const sel of card.querySelectorAll("select")) {
+      sel.addEventListener("change", onAnswerChange);
+    }
+    // Apply gate state for posts that already have off-topic saved
+    applyGate(card);
+  }
+  updateProgress();
+}
+
+function applyGate(card) {
+  const offTopicSel = card.querySelector("select[data-field='off_topic']");
+  const codingGrid = card.querySelector(".coding-grid");
+  const autoNotice = card.querySelector(".auto-coded-notice");
+  const subSelects = card.querySelectorAll(".coding-grid select");
+  const value = offTopicSel.value;
+
+  if (value === "Yes") {
+    // Off-topic: auto-fill the 4 dropdowns and hide the grid behind a notice
+    for (const sel of subSelects) {
+      const field = sel.dataset.field;
+      if (field === "consumer" || field === "ai") sel.value = "NEUTRAL";
+      else if (field === "consumer_conf" || field === "ai_conf") sel.value = "HIGH";
+      sel.disabled = true;
+    }
+    codingGrid.style.display = "none";
+    autoNotice.style.display = "block";
+  } else if (value === "No") {
+    // Active coding: enable the dropdowns. If they were auto-filled by a previous
+    // "Yes" selection (i.e. consumer===NEUTRAL && ai===NEUTRAL && both confs===HIGH),
+    // clear them so the coder has to consciously code.
+    const wasAutoFilled = (
+      card.querySelector("[data-field='consumer']").value === "NEUTRAL" &&
+      card.querySelector("[data-field='ai']").value === "NEUTRAL" &&
+      card.querySelector("[data-field='consumer_conf']").value === "HIGH" &&
+      card.querySelector("[data-field='ai_conf']").value === "HIGH"
+    );
+    if (wasAutoFilled && card.dataset.lastOffTopic === "Yes") {
+      for (const sel of subSelects) { sel.value = ""; }
+    }
+    for (const sel of subSelects) { sel.disabled = false; }
+    codingGrid.style.display = "grid";
+    autoNotice.style.display = "none";
+  } else {
+    // Not yet answered — hide the coding grid and notice
+    codingGrid.style.display = "none";
+    autoNotice.style.display = "none";
+    for (const sel of subSelects) { sel.disabled = false; }
+  }
+  card.dataset.lastOffTopic = value;
+}
+
+function gatherAnswers() {
+  const answers = {};
+  for (const card of document.querySelectorAll(".post-card")) {
+    const pid = card.dataset.postId;
+    const a = {};
+    for (const sel of card.querySelectorAll("select")) {
+      a[sel.dataset.field] = sel.value;
+    }
+    answers[pid] = a;
+  }
+  return answers;
+}
+
+function isPostComplete(a) {
+  return a && a.consumer && a.consumer_conf && a.ai && a.ai_conf && a.off_topic;
+}
+
+function updateProgress() {
+  const answers = gatherAnswers();
+  let n = 0;
+  for (const card of document.querySelectorAll(".post-card")) {
+    const pid = card.dataset.postId;
+    const complete = isPostComplete(answers[pid]);
+    card.classList.toggle("complete", complete);
+    if (complete) n++;
+  }
+  document.getElementById("progress-count").textContent = n;
+  document.getElementById("btn-mark-complete").disabled = (n !== POSTS.length);
+}
+
+let saveTimer = null;
+function saveAll() {
+  const data = loadSession();
+  data.answers = gatherAnswers();
+  data.posts_snapshot = POSTS;  // so the index can build the combined CSV
+  data.last_saved = new Date().toISOString();
+  saveSession(data);
+  document.getElementById("save-status").textContent = "All changes saved · " + new Date().toLocaleTimeString();
+}
+
+function onAnswerChange(event) {
+  // If the off-topic field changed, re-apply the gate first (which may auto-fill
+  // or clear the other 4 dropdowns) BEFORE we save and update progress.
+  if (event && event.target && event.target.dataset.field === "off_topic") {
+    const card = event.target.closest(".post-card");
+    applyGate(card);
+  }
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { saveAll(); updateProgress(); }, 200);
+  updateProgress();
+}
+
+function markSessionComplete() {
+  const data = loadSession();
+  data.answers = gatherAnswers();
+  data.posts_snapshot = POSTS;
+  data.marked_complete = true;
+  data.completed_at = new Date().toISOString();
+  saveSession(data);
+  alert(`Session ${SESSION_NUM} marked as complete!\n\nReturn to the study home page to continue with the other sessions.`);
+  window.location.href = "index.html";
+}
+
+function openCodebook() { document.getElementById("codebook-overlay").classList.add("show"); }
+function closeCodebook() { document.getElementById("codebook-overlay").classList.remove("show"); }
+
+window.addEventListener("DOMContentLoaded", () => {
+  const g = loadGlobal();
+  if (!g.prolific_id || g.prolific_id.length < 8) {
+    document.getElementById("no-pid-warning").style.display = "block";
+    document.getElementById("posts-container").style.display = "none";
+    document.getElementById("pid-banner").style.display = "none";
+    return;
+  }
+  document.getElementById("pid-display").textContent = g.prolific_id;
+  document.getElementById("save-status").textContent = "Loaded.";
+  renderPosts();
+});
+</script>
+</body>
+</html>
